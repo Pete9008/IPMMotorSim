@@ -1,5 +1,5 @@
 # IPMMotorSim
-This project is a IPM Motor simulator intended to be uses with the Huebner inverter project, in particular the stm32-sine FOC firmware build.
+This project is an IPM Motor simulator intended to be uses with the Huebner inverter project, in particular the stm32-sine FOC firmware build.
 
 # Aims
 The main aim of this project is to allow testing and development of the motor control sections of the inverter firmware in a safe reproducible environment.
@@ -9,7 +9,7 @@ The model is not intended to be perfect and is in the very early days of its dev
 # Compiling
 Qt Creator is required to compile this code.
 
-A version of the source code for the stm32-sine firmware must be placed in the stm32-sine subdirectory of this project.  This will then be the used by the simulator to control the motor.  The simulator has been tested with v5.17R-2 but other version may also work.
+A version of the source code for the stm32-sine firmware must be placed in the stm32-sine subdirectory of this project.  This will then be the used by the simulator to control the motor.  The simulator has been tested with v5.17R-2 but other versions may also work.
 
 # Current Limitations
 The simulator uses a number of new parameters not yet found in most builds of stm32-sin.  There is a replacement param_prj.h file in the project directory that will be used in place of the one in the subdirectory.  It is up to the user to ensure that the parameters contained in this replacement file are appropriate for whichever version of the stn32-sine software is being used.
