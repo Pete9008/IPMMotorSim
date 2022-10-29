@@ -59,7 +59,7 @@
     PARAM_ENTRY(CAT_MOTOR,   fwmargin,    "dig",     0,      10000,  2500,   141 ) \
     PARAM_ENTRY(CAT_MOTOR,   syncofs,     "dig",     0,      65535,  0,      70  ) \
     PARAM_ENTRY(CAT_MOTOR,   lqminusld,   "mH",      0,      1000,   2,      139 ) \
-    PARAM_ENTRY(CAT_MOTOR,   ld,          "mH",      0,      1000,   3,      144 ) \
+    PARAM_ENTRY(CAT_MOTOR,   icrit,       "A",       -1000,  0,      -75,    144 ) \
     PARAM_ENTRY(CAT_MOTOR,   fluxlinkage, "mWeber",  0,      1000,   150,    140 ) \
     PARAM_ENTRY(CAT_MOTOR,   syncadv,     "dig/Hz",  0,      65535,  7,      133 ) \
     PARAM_ENTRY(CAT_MOTOR,   ffwstart,    "Hz",      0,      1000,   200,    136 ) \
