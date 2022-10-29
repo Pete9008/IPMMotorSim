@@ -29,15 +29,16 @@ class DataGraph : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit DataGraph(QWidget *parent = nullptr);
+    explicit DataGraph(QString name, QWidget *parent = nullptr);
     ~DataGraph();
+    void saveWinState();
     void addSeries(QString legend, int key);
     void addDataPoint(double x, double y, int key);
     void addDataPoints(QList<QPointF> pointList, int key);
     void clearData();
     void updateGraph(void);
-    void updateXaxis(void);
-    void updateYaxis(void);
+    void updateXaxis(double min, double max);
+    void updateYaxis(double min, double max);
     void setColour(QColor colour, int key);
     void setOpacity(qreal opacity, int key);
 
@@ -50,6 +51,7 @@ private:
     QMap<int, qreal> m_opacity;
 
     double minX, maxX, minY, maxY;
+    QString mName;
 
 signals:
 

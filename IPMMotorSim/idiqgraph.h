@@ -17,9 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TESTSTUBS_H
-#define TESTSTUBS_H
+#ifndef IDIQGRAPH_H
+#define IDIQGRAPH_H
 
-void testStubsClearEncoder(void);
+#include <QMainWindow>
+#include "datagraph.h"
 
-#endif // TESTSTUBS_H
+class IdIqGraph : public DataGraph
+{
+public:
+    explicit IdIqGraph(QString name, QWidget *parent = nullptr);
+    void updateGraph(void);
+};
+
+#endif // IDIQGRAPH_H

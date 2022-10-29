@@ -25,7 +25,7 @@
 class MotorModel
 {
 public:
-    MotorModel(double wheelSize,double ratio,double drag,double mass,double Lq,double Ld,double Rs,double poles,double fluxLink,double timestep,double fluxLinkageDelta, double syncDelay, double sampPoint);
+    MotorModel(double wheelSize,double ratio,double drag,double mass,double Lq,double Ld,double Rs,double poles,double fluxLink,double timestep, double syncDelay, double sampPoint);
     void Step(double Va, double Vb, double Vc);
     void Restart(void);
     void setWheelSize(double val) {m_WheelSize = val;}
@@ -37,7 +37,6 @@ public:
     void setRs(double val) {m_Rs = val;}
     void setPoles(double val) {m_Poles = val;}
     void setFluxLinkage(double val) {m_FluxLink = val;}
-    void setFluxLinkageDelta(double val) {m_fluxLinkageDelta = val;}
     void setSyncDelay(double val) {m_syncdelay = val;}
     void setTimestep(double val) {m_Timestep = val;}
     void setPosition(double val) {m_Position = (val * m_Poles);}
@@ -54,6 +53,15 @@ public:
     double getIcSamp(void) {return m_IcSamp;}
     double getIq(void) {return m_Iq;} //model output
     double getId(void) {return m_Id;}
+    double getVd(void) {return m_Vd;}
+    double getVq(void) {return m_Vq;}
+    double getVq_bemf(void) {return m_Vq_bemf;}
+    double getVq_dueto_id(void) {return m_Vq_dueto_id;}
+    double getVd_dueto_iq(void) {return m_Vd_dueto_iq;}
+    double getVq_dueto_Rq(void) {return m_Vq_dueto_Rq;}
+    double getVd_dueto_Rd(void) {return m_Vd_dueto_Rd;}
+    double getVLd(void) {return m_VLd;}
+    double getVLq(void) {return m_VLq;}
 
 private:
     double m_WheelSize;
@@ -65,18 +73,26 @@ private:
     double m_Rs;
     double m_Poles;
     double m_FluxLink; //Hz
-    double m_fluxLinkageDelta; //% change in BEMF per A of neg Id
     double m_syncdelay;
     double m_samplingPoint; //sampling position as fraction of period, 0=start, 1=end
 
     double m_Position; //degrees
-    double m_Frequency; // Hz
+    double m_Frequency; // Hz motor speed (NOT electrical)
     double m_Timestep;
     double m_Ia, m_Ib, m_Ic;
     double m_IaSamp, m_IbSamp, m_IcSamp;
     double m_Id, m_Iq;
     double m_Speed; // m/s
 
+    double m_Vd;
+    double m_Vq;
+    double m_Vq_bemf;
+    double m_Vq_dueto_id;
+    double m_Vd_dueto_iq;
+    double m_Vq_dueto_Rq;
+    double m_Vd_dueto_Rd;
+    double m_VLd;
+    double m_VLq;
 };
 
 #endif // MOTORMODEL_H

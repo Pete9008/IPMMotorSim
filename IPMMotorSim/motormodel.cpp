@@ -19,8 +19,8 @@
 
 #include "motormodel.h"
 
-MotorModel::MotorModel(double wheelSize,double ratio,double drag,double mass,double Lq,double Ld,double Rs,double poles,double fluxLink,double timestep,double fluxLinkageDelta, double syncDelay, double sampPoint)
-    :m_WheelSize{wheelSize},m_Ratio{ratio},m_Drag{drag},m_Mass{mass},m_Lq{Lq},m_Ld{Ld},m_Rs{Rs},m_Poles{poles},m_FluxLink{fluxLink},m_Timestep{timestep},m_fluxLinkageDelta{fluxLinkageDelta}, m_syncdelay{syncDelay}, m_samplingPoint{sampPoint}
+MotorModel::MotorModel(double wheelSize,double ratio,double drag,double mass,double Lq,double Ld,double Rs,double poles,double fluxLink,double timestep, double syncDelay, double sampPoint)
+    :m_WheelSize{wheelSize},m_Ratio{ratio},m_Drag{drag},m_Mass{mass},m_Lq{Lq},m_Ld{Ld},m_Rs{Rs},m_Poles{poles},m_FluxLink{fluxLink},m_Timestep{timestep}, m_syncdelay{syncDelay}, m_samplingPoint{sampPoint}
 {
     Restart();
 }
@@ -47,29 +47,26 @@ void MotorModel::Step(double Va, double Vb, double Vc)
 
     double elecAngle = fmod(m_Position,360.0);
 
-    double Vd = (Valpha * qCos(qDegreesToRadians(m_Position))) + (Vbeta * qSin(qDegreesToRadians(elecAngle)));
-    double Vq = (-Valpha * qSin(qDegreesToRadians(m_Position))) + (Vbeta * qCos(qDegreesToRadians(elecAngle)));
+    m_Vd = (Valpha * qCos(qDegreesToRadians(m_Position))) + (Vbeta * qSin(qDegreesToRadians(elecAngle)));
+    m_Vq = (-Valpha * qSin(qDegreesToRadians(m_Position))) + (Vbeta * qCos(qDegreesToRadians(elecAngle)));
 
-    //Note - this is not a complete model, hopefully it will be improved with time.
-    //It is believed to be good enough to allow basic testing of a motor controller but it is up to the user to decide whether it is adequate
-    //There are other components on the motor equations but until they are fully understood they will not be included
-    //Not convinced saliency is properly represented
-    //Is the BEMF purely quadrature phase
+    m_Vq_bemf = m_FluxLink * m_Poles * m_Frequency * 2 * M_PI;
+    m_Vq_dueto_id = m_Poles * m_Frequency * 2 * M_PI * m_Ld * m_Id;
+    m_Vd_dueto_iq = m_Poles * m_Frequency * 2 * M_PI * m_Lq * m_Iq;
 
-    double Vq_bemf = m_FluxLink * m_Poles * m_Frequency * 2 * M_PI;
-    double bemfScaling = 1-(-m_Id * (m_fluxLinkageDelta/100.0));
-    Vq_bemf = Vq_bemf * bemfScaling;
+    m_Vd_dueto_Rd = (m_Rs * m_Id);
+    m_Vq_dueto_Rq = (m_Rs * m_Iq);
 
-    double VLd = Vd - (m_Rs * m_Id) - 0.0;//is there any reactive BEMF - saliency??
-    double VLq = Vq - (m_Rs * m_Iq) - Vq_bemf;
+    m_VLd = m_Vd - m_Vd_dueto_Rd + m_Vd_dueto_iq;
+    m_VLq = m_Vq - m_Vq_dueto_Rq - m_Vq_bemf - m_Vq_dueto_id;
 
     //variables to allow for values to be read at a variable sampling point to simulate non ideal behaviour of real controllers
-    double IdSamp = m_Id + (VLd * m_Timestep * m_samplingPoint)/m_Ld;
-    double IqSamp = m_Iq + (VLq * m_Timestep * m_samplingPoint)/m_Lq;
+    double IdSamp = m_Id + (m_VLd * m_Timestep * m_samplingPoint)/m_Ld;
+    double IqSamp = m_Iq + (m_VLq * m_Timestep * m_samplingPoint)/m_Lq;
     double oldPosition = m_Position;
 
-    double Id_delta = (VLd * m_Timestep)/m_Ld;
-    double Iq_delta = (VLq * m_Timestep)/m_Lq;
+    double Id_delta = (m_VLd * m_Timestep)/m_Ld;
+    double Iq_delta = (m_VLq * m_Timestep)/m_Lq;
 
     m_Id = m_Id + Id_delta;
     m_Iq = m_Iq + Iq_delta;
@@ -81,7 +78,6 @@ void MotorModel::Step(double Va, double Vb, double Vc)
     m_Ib = (-Ialpha + (qSqrt(3.0) * Ibeta)) / 2.0;
     m_Ic = (-Ialpha - (qSqrt(3.0) * Ibeta)) / 2.0;
 
-    //have doubts about this, it seems to heavily over estimate the torque for motors with saliency - need to review
     double torque = (3.0/2.0) * m_Poles * ((m_FluxLink * m_Iq) + ((m_Ld - m_Lq) * m_Id * m_Iq));
 
     //This is a very simple model just lumping everything together in a single vehicle mass
@@ -98,7 +94,7 @@ void MotorModel::Step(double Va, double Vb, double Vc)
     double posDelta = m_Frequency * m_Timestep * (360.0 * m_Poles);
     m_Position = m_Position + posDelta;
 
-    //Remaining variable sampling point calculation
+    //Remaining variable sampling point calculation, used to simulate OpenInverter sampling point (5.20 and earlier)
     double sampPosition = ((oldPosition * (1.0-m_samplingPoint)) + (m_Position * m_samplingPoint));
     double elecAngleSamp = fmod(sampPosition, 360.0);
     Ialpha = (IdSamp * qCos(qDegreesToRadians(elecAngleSamp))) - (IqSamp * qSin(qDegreesToRadians(elecAngleSamp)));

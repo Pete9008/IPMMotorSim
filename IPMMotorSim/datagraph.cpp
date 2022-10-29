@@ -23,10 +23,14 @@
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
+#include <QSettings>
 #include <limits>
 
-DataGraph::DataGraph(QWidget *parent) : QMainWindow(parent)
+DataGraph::DataGraph(QString name, QWidget *parent) : QMainWindow(parent)
 {
+    mName = name;
+    QSettings settings("OpenInverter", "IPMMotorSim");
+
     minY =  std::numeric_limits<double>::max();
     maxY =  std::numeric_limits<double>::lowest();
     minX =  std::numeric_limits<double>::max();
@@ -39,10 +43,25 @@ DataGraph::DataGraph(QWidget *parent) : QMainWindow(parent)
     m_chartView->setRenderHint(QPainter::Antialiasing);
 
     setCentralWidget(m_chartView);
-    resize(1600, 300);
+    if(!restoreGeometry(settings.value(mName + "/geometry").toByteArray()) || !restoreState(settings.value(mName + "/windowState").toByteArray()))
+    {
+        resize(1600, 300);
+    }
     grabGesture(Qt::PanGesture);
     grabGesture(Qt::PinchGesture);
     show();
+}
+
+void DataGraph::saveWinState()
+{
+    QSettings settings("OpenInverter", "IPMMotorSim");
+    QByteArray geo = saveGeometry();
+    QByteArray ste = saveState();
+    QString gname = mName + "/geometry";
+    QString sname = mName + "/windowState";
+    settings.setValue(gname, geo);
+    settings.setValue(sname, ste);
+    hide();
 }
 
 DataGraph::~DataGraph()
@@ -115,14 +134,14 @@ void DataGraph::updateGraph(void)
     m_chart->axisY()->setRange(minY, maxY);
 }
 
-void DataGraph::updateXaxis(void)
+void DataGraph::updateXaxis(double min, double max)
 {
-    m_chart->axisX()->setRange(minX, maxX);
+    m_chart->axisX()->setRange(min, max);
 }
 
-void DataGraph::updateYaxis(void)
+void DataGraph::updateYaxis(double min, double max)
 {
-    m_chart->axisY()->setRange(minY, maxY);
+    m_chart->axisY()->setRange(min, max);
 }
 
 void DataGraph::clearData(void)
