@@ -48,6 +48,25 @@ static int32_t turnsSinceLastSample = 0;
 static u32fp lastFrequency = 0;
 static int32_t detectedDirection = 0;
 
+static uint16_t lastAngle = 0;
+static int poleCounter = 0;
+
+void testStubsClearEncoder(void)
+{
+    angle = 0;
+    resolverMin = 0;
+    resolverMax = 0;
+    startupDelay=0;
+    fullTurns = 0;
+    seenNorthSignal = true;
+    distance = 0;
+    turnsSinceLastSample = 0;
+    lastFrequency = 0;
+    detectedDirection = 0;
+    lastAngle = 0;
+    poleCounter = 0;
+}
+
 bool Encoder::SeenNorthSignal()
 {
    return seenNorthSignal;
@@ -55,8 +74,7 @@ bool Encoder::SeenNorthSignal()
 
 void Encoder::UpdateRotorAngle(int dir)
 {
-    static uint16_t lastAngle = 0;
-    static int poleCounter = 0;
+
 
     angle = g_input_angle;
     UpdateTurns(angle, lastAngle);
@@ -121,6 +139,11 @@ u32fp Encoder::GetRotorFrequency()
    return lastFrequency;
 }
 
+int Encoder::GetRotorDirection()
+{
+   return detectedDirection;
+}
+
 void timer_disable_break_main_output(int i)
 {
 
@@ -146,11 +169,9 @@ void Param::Change(Param::PARAM_NUM paramNum)
          PwmGeneration::SetPolePairRatio(Param::GetInt(Param::polepairs) / Param::GetInt(Param::respolepairs));
 
          #if CONTROL == CTRL_FOC
-         PwmGeneration::SetControllerGains(Param::GetInt(Param::curkp), Param::GetInt(Param::curki), Param::GetInt(Param::fwkp));
+         PwmGeneration::SetControllerGains(Param::GetInt(Param::curkp), Param::GetInt(Param::curki), Param::GetInt(Param::fwkp), Param::GetInt(Param::fwki), Param::GetInt(Param::vlimkp), Param::GetInt(Param::vlimki), Param::GetInt(Param::fwmargin));
+         FOC::SetMotorParameters(Param::GetFloat(Param::lqminusld)/1000, Param::GetFloat(Param::fluxlinkage)/1000);
          #endif // CONTROL
-         #ifdef HAS_MTPA_PARAMS
-         FOC::SetMtpaParams();
-         #endif // HAS_MTPA_PARAMS
          break;
    }
 }

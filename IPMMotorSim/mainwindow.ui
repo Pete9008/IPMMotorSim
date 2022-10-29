@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>675</width>
-    <height>674</height>
+    <height>732</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,7 +49,7 @@
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>300</string>
+         <string>500</string>
         </property>
        </widget>
       </item>
@@ -117,7 +117,7 @@
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>25</string>
+         <string>.5</string>
         </property>
        </widget>
       </item>
@@ -125,6 +125,16 @@
        <widget class="QLabel" name="labelLd">
         <property name="text">
          <string>Ld (mH)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="Ld">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>.16</string>
         </property>
        </widget>
       </item>
@@ -145,13 +155,10 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
-       <widget class="QLineEdit" name="Ld">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
+      <item row="7" column="0">
+       <widget class="QLabel" name="labelFluxLink">
         <property name="text">
-         <string>25</string>
+         <string>λ ( mWeber)</string>
         </property>
        </widget>
       </item>
@@ -165,24 +172,14 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="labelFluxLink">
+      <item row="8" column="0">
+       <widget class="QLabel" name="labelSyncDelay">
         <property name="text">
-         <string>λ ( mWeber)</string>
+         <string>SyncDel (us)</string>
         </property>
        </widget>
       </item>
       <item row="8" column="1">
-       <widget class="QLineEdit" name="FluxLinkageDelta">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>0.3</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="1">
        <widget class="QLineEdit" name="SyncDelay">
         <property name="enabled">
          <bool>true</bool>
@@ -192,68 +189,73 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="1">
-       <widget class="QLineEdit" name="Drag">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>100</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="1">
-       <widget class="QLineEdit" name="LoopFreq">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>8333</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="labelFluxLinkDelta">
-        <property name="text">
-         <string>λdelta ( %/AId)</string>
-        </property>
-       </widget>
-      </item>
       <item row="9" column="0">
-       <widget class="QLabel" name="labelSyncDelay">
-        <property name="text">
-         <string>SyncDel (us)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="0">
-       <widget class="QLabel" name="labelDrag">
-        <property name="text">
-         <string>Drag (%)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="0">
        <widget class="QLabel" name="labelLoopFreq">
         <property name="text">
          <string>Loop Frequency (Hz)</string>
         </property>
        </widget>
       </item>
-      <item row="12" column="0">
+      <item row="9" column="1">
+       <widget class="QLineEdit" name="LoopFreq">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>8800</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
        <widget class="QLabel" name="labelSampPoint">
         <property name="text">
          <string>Sampling Point (%)</string>
         </property>
        </widget>
       </item>
-      <item row="12" column="1">
+      <item row="10" column="1">
        <widget class="QLineEdit" name="SamplingPoint">
         <property name="enabled">
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>100</string>
+         <string>50</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="0">
+       <widget class="QCheckBox" name="ExtraCycleDelay">
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
+        <property name="text">
+         <string>Extra Cycle Delay</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="0">
+       <widget class="QCheckBox" name="AddNoise">
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
+        <property name="text">
+         <string>Add Noise (Ap-p)</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="1">
+       <widget class="QLineEdit" name="NoiseAmp">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>10</string>
         </property>
        </widget>
       </item>
@@ -266,7 +268,7 @@
       <x>460</x>
       <y>10</y>
       <width>171</width>
-      <height>281</height>
+      <height>351</height>
      </rect>
     </property>
     <property name="title">
@@ -278,7 +280,7 @@
        <x>0</x>
        <y>20</y>
        <width>171</width>
-       <height>261</height>
+       <height>331</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
@@ -331,7 +333,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
+      <item row="8" column="0">
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -344,92 +346,24 @@
         </property>
        </spacer>
       </item>
-      <item row="7" column="0">
+      <item row="9" column="0">
        <widget class="QPushButton" name="pbRestart">
         <property name="text">
          <string>Restart</string>
         </property>
        </widget>
       </item>
-     </layout>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="groupBox_3">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>460</y>
-      <width>171</width>
-      <height>111</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Flux Linkage Calculator</string>
-    </property>
-    <widget class="QWidget" name="formLayoutWidget_3">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>20</y>
-       <width>171</width>
-       <height>112</height>
-      </rect>
-     </property>
-     <layout class="QFormLayout" name="formLayout_3">
-      <item row="0" column="0">
-       <widget class="QLabel" name="labelBaseFreq">
+      <item row="6" column="0">
+       <widget class="QPushButton" name="pbTransient">
         <property name="text">
-         <string>Base Frequency (rpm)</string>
+         <string>Transient</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="labelBaseVolts">
+      <item row="7" column="0">
+       <widget class="QPushButton" name="pbAccelCoast">
         <property name="text">
-         <string>Base Voltage (V)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="BaseVolts">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>300</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="labelCalcFluxLink">
-        <property name="text">
-         <string>λ ( Weber)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="CalcFluxLink">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="autoFillBackground">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>0.14</string>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="BaseFreq">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>5000</string>
+         <string>Accel/Coast</string>
         </property>
        </widget>
       </item>
@@ -442,7 +376,7 @@
       <x>240</x>
       <y>10</y>
       <width>201</width>
-      <height>591</height>
+      <height>661</height>
      </rect>
     </property>
     <property name="title">
@@ -454,7 +388,7 @@
        <x>0</x>
        <y>20</y>
        <width>201</width>
-       <height>571</height>
+       <height>641</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_4">
@@ -471,7 +405,7 @@
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>0</string>
+         <string>100</string>
         </property>
        </widget>
       </item>
@@ -637,7 +571,7 @@
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>32</string>
+         <string>0</string>
         </property>
        </widget>
       </item>
@@ -654,14 +588,133 @@
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>40</string>
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="13" column="0">
+       <widget class="QLabel" name="labelVLimKi">
+        <property name="text">
+         <string>VLim Ki</string>
+        </property>
+       </widget>
+      </item>
+      <item row="13" column="1">
+       <widget class="QLineEdit" name="VLimKi">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>3</string>
+        </property>
+       </widget>
+      </item>
+      <item row="15" column="0">
+       <widget class="QLabel" name="labelFWmargin">
+        <property name="text">
+         <string>FWmargin</string>
+        </property>
+       </widget>
+      </item>
+      <item row="15" column="1">
+       <widget class="QLineEdit" name="FWMargin">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>2500</string>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="0">
+       <widget class="QLabel" name="labelLqMinusLd">
+        <property name="text">
+         <string>Lq - Ld (mH)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="1">
+       <widget class="QLineEdit" name="LqMinusLd">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="17" column="0">
+       <widget class="QLabel" name="labelSyncAdv">
+        <property name="text">
+         <string>SyncAdv (dig/Hz)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="17" column="1">
+       <widget class="QLineEdit" name="SyncAdv">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="19" column="0">
+       <widget class="QLabel" name="labelICrit">
+        <property name="text">
+         <string>Icrit</string>
+        </property>
+       </widget>
+      </item>
+      <item row="19" column="1">
+       <widget class="QLineEdit" name="ICrit">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>-50</string>
+        </property>
+       </widget>
+      </item>
+      <item row="20" column="0">
+       <widget class="QLabel" name="labelFMax">
+        <property name="text">
+         <string>FMax (Hz)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="20" column="1">
+       <widget class="QLineEdit" name="FreqMax">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>166</string>
+        </property>
+       </widget>
+      </item>
+      <item row="18" column="0">
+       <widget class="QLabel" name="labelSyncOfs">
+        <property name="text">
+         <string>SyncOfs</string>
+        </property>
+       </widget>
+      </item>
+      <item row="18" column="1">
+       <widget class="QLineEdit" name="SyncOfs">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>0</string>
         </property>
        </widget>
       </item>
       <item row="12" column="0">
        <widget class="QLabel" name="labelVLimKp">
         <property name="text">
-         <string>ULim Kp</string>
+         <string>VLim Kp</string>
         </property>
        </widget>
       </item>
@@ -675,98 +728,20 @@
         </property>
        </widget>
       </item>
-      <item row="13" column="0">
-       <widget class="QLabel" name="labelVLimKi">
-        <property name="text">
-         <string>ULim Ki</string>
-        </property>
-       </widget>
-      </item>
-      <item row="13" column="1">
-       <widget class="QLineEdit" name="VLimKi">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>10</string>
-        </property>
-       </widget>
-      </item>
       <item row="14" column="0">
-       <widget class="QLabel" name="labelLqMinusLd">
+       <widget class="QLabel" name="labelCurKiFrqGain">
         <property name="text">
-         <string>Lq - Ld (mH)</string>
+         <string>CurKiFrqGain</string>
         </property>
        </widget>
       </item>
       <item row="14" column="1">
-       <widget class="QLineEdit" name="LqMinusLd">
+       <widget class="QLineEdit" name="CurKiFrqGain">
         <property name="enabled">
          <bool>true</bool>
         </property>
         <property name="text">
          <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="15" column="0">
-       <widget class="QLabel" name="labelSyncAdv">
-        <property name="text">
-         <string>SyncAdv (dig/Hz)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="15" column="1">
-       <widget class="QLineEdit" name="SyncAdv">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="16" column="0">
-       <widget class="QLabel" name="labelFWStart">
-        <property name="text">
-         <string>FW Start (Hz)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="16" column="1">
-       <widget class="QLineEdit" name="FWStart">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>83</string>
-        </property>
-       </widget>
-      </item>
-      <item row="17" column="0">
-       <widget class="QLabel" name="labelFMax">
-        <property name="text">
-         <string>FMax (Hz)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="17" column="1">
-       <widget class="QLineEdit" name="FreqMax">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>166</string>
-        </property>
-       </widget>
-      </item>
-      <item row="18" column="0">
-       <widget class="QCheckBox" name="ExtraCycleDelay">
-        <property name="layoutDirection">
-         <enum>Qt::RightToLeft</enum>
-        </property>
-        <property name="text">
-         <string>Extra Cycle Delay</string>
         </property>
        </widget>
       </item>

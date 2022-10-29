@@ -20,10 +20,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QtMath>
+#include <QRandomGenerator>
+#include <QSettings>
 #include "pwmgeneration.h"
 #include "foc.h"
 #include "params.h"
 #include "inc_encoder.h"
+#include "teststubs.h"
 
 #define GPIOA 0
 #define GPIOB 1
@@ -53,6 +56,20 @@
 #define C_IFW 8
 #define C_IVLIM 9
 
+//Voltage graph
+#define VVD 1
+#define VVQ 2
+#define VVQ_BEMF 3
+#define VVQ_DT_ID 4
+#define VVD_DT_IQ 5
+#define VVQ_DT_RQ 6
+#define VVD_DT_RD 7
+#define VVLD 8
+#define VVLQ 9
+
+//Op point graph
+#define IDIQAMPS 2
+
 #define TWO_PI_CONT 65536
 
 //c++ test stubs globals
@@ -70,71 +87,135 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QSettings settings("OpenInverter", "IPMMotorSim");
+    restoreGeometry(settings.value("mainwin/geometry").toByteArray());
+    restoreState(settings.value("mainwin/windowState").toByteArray());
+
+    if(settings.contains(ui->vehicleWeight->objectName())) ui->vehicleWeight->setText(settings.value(ui->vehicleWeight->objectName(),QString()).toString());
+    if(settings.contains(ui->wheelSize->objectName())) ui->wheelSize->setText(settings.value(ui->wheelSize->objectName(),QString()).toString());
+    if(settings.contains(ui->gearRatio->objectName())) ui->gearRatio->setText(settings.value(ui->gearRatio->objectName(),QString()).toString());
+    if(settings.contains(ui->Vdc->objectName())) ui->Vdc->setText(settings.value(ui->Vdc->objectName(),QString()).toString());
+    if(settings.contains(ui->Lq->objectName())) ui->Lq->setText(settings.value(ui->Lq->objectName(),QString()).toString());
+    if(settings.contains(ui->Ld->objectName())) ui->Ld->setText(settings.value(ui->Ld->objectName(),QString()).toString());
+    if(settings.contains(ui->Rs->objectName())) ui->Rs->setText(settings.value(ui->Rs->objectName(),QString()).toString());
+    if(settings.contains(ui->SyncDelay->objectName())) ui->SyncDelay->setText(settings.value(ui->SyncDelay->objectName(),QString()).toString());
+    if(settings.contains(ui->LoopFreq->objectName())) ui->LoopFreq->setText(settings.value(ui->LoopFreq->objectName(),QString()).toString());
+    if(settings.contains(ui->SamplingPoint->objectName())) ui->SamplingPoint->setText(settings.value(ui->SamplingPoint->objectName(),QString()).toString());
+    if(settings.contains(ui->ExtraCycleDelay->objectName())) ui->ExtraCycleDelay->setChecked(settings.value(ui->ExtraCycleDelay->objectName()).toBool());
+    if(settings.contains(ui->AddNoise->objectName())) ui->AddNoise->setChecked(settings.value(ui->AddNoise->objectName()).toBool());
+    if(settings.contains(ui->NoiseAmp->objectName())) ui->NoiseAmp->setText(settings.value(ui->NoiseAmp->objectName(),QString()).toString());
+
+    motorGraph = new DataGraph("motor", this);
+    simulationGraph = new DataGraph("sim", this);
+    controllerGraph = new DataGraph("cont", this);
+    debugGraph = new DataGraph("debug", this);
+    voltageGraph = new DataGraph("voltage", this);
+    idigGraph = new IdIqGraph("idig", this);
+
     ANA_IN_CONFIGURE(ANA_IN_LIST);
+
+    ui->LqMinusLd->setText(QString::number(Param::GetFloat(Param::lqminusld), 'f', 1));
+    ui->FluxLinkage->setText(QString::number(Param::GetInt(Param::fluxlinkage)));
+    ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
+    ui->FreqMax->setText(QString::number(Param::GetFloat(Param::fmax), 'f', 1));
+    ui->Poles->setText(QString::number(Param::GetFloat(Param::polepairs), 'f', 1));
+    ui->CurrentKp->setText(QString::number(Param::GetInt(Param::curkp)));
+    ui->CurrentKi->setText(QString::number(Param::GetInt(Param::curki)));
+    ui->FWKp->setText(QString::number(Param::GetInt(Param::fwkp)));
+    ui->FWKi->setText(QString::number(Param::GetInt(Param::fwki)));
+    ui->CurKiFrqGain->setText(QString::number(Param::GetInt(Param::curkifrqgain)));
+    ui->FWMargin->setText(QString::number(Param::GetInt(Param::fwmargin)));
+    ui->VLimKp->setText(QString::number(Param::GetInt(Param::vlimkp)));
+    ui->VLimKi->setText(QString::number(Param::GetInt(Param::vlimki)));
+    ui->IdManual->setText(QString::number(Param::GetFloat(Param::manualid), 'f', 1));
+    ui->IqManual->setText(QString::number(Param::GetFloat(Param::manualiq), 'f', 1));
+    ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
+    ui->throttleCurrent->setText(QString::number(Param::GetFloat(Param::throtcur), 'f', 1));
+    ui->ICrit->setText(QString::number(Param::GetFloat(Param::icrit), 'f', 1));
 
     m_wheelSize = ui->wheelSize->text().toDouble();
     m_vehicleWeight = ui->vehicleWeight->text().toDouble();
     m_gearRatio = ui->gearRatio->text().toDouble();
-    m_drag = ui->Drag->text().toDouble();
+    m_drag = 0; //not used
     m_Lq = ui->Lq->text().toDouble()/1000; //entered in mH
     m_Ld = ui->Ld->text().toDouble()/1000; //entered in mH
     m_Rs = ui->Rs->text().toDouble();
     m_Poles = ui->Poles->text().toDouble();
     m_fluxLinkage = ui->FluxLinkage->text().toDouble()/1000; //entered in mWeber
-    m_fluxLinkageDelta = ui->FluxLinkageDelta->text().toDouble();
     m_syncdelay = ui->SyncDelay->text().toDouble()/1000000; //entered in uS
     m_samplingPoint = ui->SamplingPoint->text().toDouble()/100.0; //entered in %
 
     m_timestep = 1.0 / ui->LoopFreq->text().toDouble();
     m_Vdc = ui->Vdc->text().toDouble();
 
-    calcFluxLinkage();
+    motor = new MotorModel(m_wheelSize,m_gearRatio,m_drag,m_vehicleWeight,m_Lq,m_Ld,m_Rs,m_Poles,m_fluxLinkage,m_timestep,m_syncdelay,m_samplingPoint);
 
-    motor = new MotorModel(m_wheelSize,m_gearRatio,m_drag,m_vehicleWeight,m_Lq,m_Ld,m_Rs,m_Poles,m_fluxLinkage,m_timestep,m_fluxLinkageDelta,m_syncdelay,m_samplingPoint);
     m_time = 0;
     m_old_time = 0;
     m_old_ms_time = 0;
 
-    motorGraph.setWindowTitle("Motor Currents");
-    motorGraph.addSeries("Ia (A)", IA);
-    motorGraph.addSeries("Ib (A)", IB);
-    motorGraph.addSeries("Ic (A)", IC);
-    motorGraph.addSeries("Iq (A)", IQ);
-    motorGraph.setColour(Qt::blue, IQ);
-    motorGraph.addSeries("Id (A)", ID);
-    motorGraph.setColour(Qt::red, ID);
-    motorGraph.show();
+    m_oldVa = 0;
+    m_oldVb = 0;
+    m_oldVc = 0;
 
-    simulationGraph.setWindowTitle("Simulation Data");
-    simulationGraph.addSeries("Motor Position (degrees)", M_MOTOR_POS);
-    simulationGraph.setOpacity(0.25, M_MOTOR_POS);
-    simulationGraph.addSeries("Controller Position (degrees)", M_CONT_POS);
-    simulationGraph.setOpacity(0.25, M_CONT_POS);
-    simulationGraph.addSeries("Motor Elec Speed (Hz)", M_RPM);
-    simulationGraph.setColour(Qt::blue, M_RPM);
-    simulationGraph.show();
+    motorGraph->setWindowTitle("Motor Currents");
+    motorGraph->addSeries("Ia (A)", IA);
+    motorGraph->addSeries("Ib (A)", IB);
+    motorGraph->addSeries("Ic (A)", IC);
+    motorGraph->addSeries("Iq (A)", IQ);
+    motorGraph->setColour(Qt::blue, IQ);
+    motorGraph->addSeries("Id (A)", ID);
+    motorGraph->setColour(Qt::red, ID);
+    motorGraph->show();
 
-    controllerGraph.setWindowTitle("Controller Voltages");
-    controllerGraph.addSeries("Va (V)", VA);
-    controllerGraph.addSeries("Vb (V)", VB);
-    controllerGraph.addSeries("Vc (V)", VC);
-    controllerGraph.addSeries("Vq (V)", VQ);
-    controllerGraph.setColour(Qt::blue, VQ);
-    controllerGraph.addSeries("Vd (V)", VD);
-    controllerGraph.setColour(Qt::red, VD);
-    controllerGraph.show();
+    simulationGraph->setWindowTitle("Simulation Data");
+    simulationGraph->addSeries("Motor Position (degrees)", M_MOTOR_POS);
+    simulationGraph->setOpacity(0.25, M_MOTOR_POS);
+    simulationGraph->addSeries("Controller Position (degrees)", M_CONT_POS);
+    simulationGraph->setOpacity(0.25, M_CONT_POS);
+    simulationGraph->addSeries("Motor Elec Speed (Hz)", M_RPM);
+    simulationGraph->setColour(Qt::blue, M_RPM);
+    simulationGraph->show();
 
-    debugGraph.setWindowTitle("Controller Currents");
-    debugGraph.addSeries("Iq (A)", C_IQ);
-    debugGraph.setColour(Qt::blue, C_IQ);
-    debugGraph.addSeries("Id (A)", C_ID);
-    debugGraph.setColour(Qt::red, C_ID);
-    debugGraph.addSeries("Ifw (A)", C_IFW);
-    debugGraph.addSeries("Throttle Reduction (%)", C_IVLIM);
-    debugGraph.show();    
+    controllerGraph->setWindowTitle("Controller Voltages");
+    controllerGraph->addSeries("Va (V)", VA);
+    controllerGraph->addSeries("Vb (V)", VB);
+    controllerGraph->addSeries("Vc (V)", VC);
+    controllerGraph->addSeries("Vq (V)", VQ);
+    controllerGraph->setColour(Qt::blue, VQ);
+    controllerGraph->addSeries("Vd (V)", VD);
+    controllerGraph->setColour(Qt::red, VD);
+    controllerGraph->show();
+
+    debugGraph->setWindowTitle("Controller Currents");
+    debugGraph->addSeries("Iq (A)", C_IQ);
+    debugGraph->setColour(Qt::blue, C_IQ);
+    debugGraph->addSeries("Id (A)", C_ID);
+    debugGraph->setColour(Qt::red, C_ID);
+    debugGraph->addSeries("Ifw (A)", C_IFW);
+    debugGraph->addSeries("Throttle Reduction (%)", C_IVLIM);
+    debugGraph->show();
+
+    voltageGraph->setWindowTitle("Motor Voltages");
+    voltageGraph->addSeries("Vd (V)", VVD);
+    voltageGraph->setColour(Qt::red, VVD);
+    voltageGraph->addSeries("Vq (V)", VVQ);
+    voltageGraph->setColour(Qt::blue, VVQ);
+    voltageGraph->addSeries("Vq_BEMF (V)", VVQ_BEMF);
+    voltageGraph->addSeries("Vq_LdId (V)", VVQ_DT_ID);
+    voltageGraph->addSeries("Vd_LqIq (V)", VVD_DT_IQ);
+    voltageGraph->addSeries("Vq_RqIq (V)", VVQ_DT_RQ);
+    voltageGraph->addSeries("Vd_RdIq (V)", VVD_DT_RD);
+    voltageGraph->addSeries("VLd (V)", VVLD);
+    voltageGraph->addSeries("VLq (V)", VVLQ);
+    voltageGraph->show();
+
+    idigGraph->setWindowTitle("Operating Point");
+    idigGraph->addSeries("I (A)", IDIQAMPS);
+    idigGraph->show();
 
     //following block copied from OpenInverter - probably not needed
-    Param:SetInt(Param::version, 4); //backward compatibility
+    Param::SetInt(Param::version, 4); //backward compatibility
 
     if (Param::GetInt(Param::snsm) < 12)
         Param::SetInt(Param::snsm, Param::GetInt(Param::snsm) + 10); //upgrade parameter
@@ -145,48 +226,14 @@ MainWindow::MainWindow(QWidget *parent) :
     Param::Change(Param::PARAM_LAST);
     Param::Change(Param::nodeid);
 
-    //Param::Set(Param::lqminusld, FP_FROMFLT(ui->LqMinusLd->text().toFloat()));
-    ui->LqMinusLd->setText(QString::number(Param::GetFloat(Param::lqminusld), 'f', 1));
-    //Param::Set(Param::fluxlinkage, FP_FROMFLT(ui->FluxLinkage->text().toFloat()));
-    ui->FluxLinkage->setText(QString::number(Param::GetInt(Param::fluxlinkage)));
-    //Param::SetInt(Param::syncadv, ui->SyncAdv->text().toInt());
-    ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
-    //Param::Set(Param::ffwstart, FP_FROMFLT(ui->FWStart->text().toFloat()));
-    ui->FWStart->setText(QString::number(Param::GetFloat(Param::ffwstart), 'f', 1));
-    //Param::Set(Param::fmax, FP_FROMFLT(ui->FreqMax->text().toFloat()));
-    ui->FreqMax->setText(QString::number(Param::GetFloat(Param::fmax), 'f', 1));
-
-    //Param::Set(Param::curkp, FP_FROMINT(ui->CurrentKp->text().toInt()));
-    ui->CurrentKp->setText(QString::number(Param::GetInt(Param::curkp)));
-    //Param::Set(Param::curki, FP_FROMINT(ui->CurrentKi->text().toInt()));
-    ui->CurrentKi->setText(QString::number(Param::GetInt(Param::curki)));
-    //Param::Set(Param::fwkp, FP_FROMINT(ui->FWKp->text().toInt()));
-    ui->FWKp->setText(QString::number(Param::GetInt(Param::fwkp)));
-    //Param::Set(Param::fwki, FP_FROMINT(ui->FWKi->text().toInt()));
-    ui->FWKi->setText(QString::number(Param::GetInt(Param::fwki)));
-    //Param::Set(Param::vlimkp, FP_FROMINT(ui->VLimKp->text().toInt()));
-    ui->VLimKp->setText(QString::number(Param::GetInt(Param::vlimkp)));
-    //Param::Set(Param::vlimki, FP_FROMINT(ui->VLimKi->text().toInt()));
-    ui->VLimKi->setText(QString::number(Param::GetInt(Param::vlimki)));
-
-    //Param::Set(Param::manualid, FP_FROMFLT(ui->IdManual->text().toFloat()));
-    ui->IdManual->setText(QString::number(Param::GetFloat(Param::manualid), 'f', 1));
-    //Param::Set(Param::manualiq, FP_FROMFLT(ui->IqManual->text().toFloat()));
-    ui->IqManual->setText(QString::number(Param::GetFloat(Param::manualiq), 'f', 1));
-
-    //Param::SetInt(Param::syncadv, ui->SyncAdv->text().toInt());
-    ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
-
-    //Param::Set(Param::throtcur, FP_FROMFLT(ui->throttleCurrent->text().toFloat()));
-    ui->throttleCurrent->setText(QString::number(Param::GetFloat(Param::throtcur), 'f', 1));
-
+    PwmGeneration::SetOpmode(0);
     PwmGeneration::SetOpmode(ui->opMode->text().toInt());
     Param::SetInt(Param::dir, ui->direction->text().toInt());
 
-    //Param::Set(Param::polepairs, FP_FROMINT(ui->Poles->text().toInt()));
     ui->Poles->setText(QString::number(Param::GetInt(Param::polepairs)));
-    //Param::Set(Param::throtcur, FP_FROMINT(ui->throttleCurrent->text().toInt()));
     ui->throttleCurrent->setText(QString::number(Param::GetInt(Param::throtcur)));
+
+    FOC::SetMotorParameters(Param::GetFloat(Param::lqminusld)/1000, Param::GetFloat(Param::fluxlinkage)/1000);
 
     PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
 
@@ -202,10 +249,30 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    motorGraph.hide();
-    simulationGraph.hide();
-    controllerGraph.hide();
-    debugGraph.hide();
+    QSettings settings("OpenInverter", "IPMMotorSim");
+    settings.setValue("mainwin/geometry", saveGeometry());
+    settings.setValue("mainwin/windowState", saveState());
+
+    settings.setValue(ui->vehicleWeight->objectName(), ui->vehicleWeight->text());
+    settings.setValue(ui->wheelSize->objectName(), ui->wheelSize->text());
+    settings.setValue(ui->gearRatio->objectName(), ui->gearRatio->text());
+    settings.setValue(ui->Vdc->objectName(), ui->Vdc->text());
+    settings.setValue(ui->Lq->objectName(), ui->Lq->text());
+    settings.setValue(ui->Ld->objectName(), ui->Ld->text());
+    settings.setValue(ui->Rs->objectName(), ui->Rs->text());
+    settings.setValue(ui->SyncDelay->objectName(), ui->SyncDelay->text());
+    settings.setValue(ui->LoopFreq->objectName(), ui->LoopFreq->text());
+    settings.setValue(ui->SamplingPoint->objectName(), ui->SamplingPoint->text());
+    settings.setValue(ui->ExtraCycleDelay->objectName(), ui->ExtraCycleDelay->isChecked());
+    settings.setValue(ui->AddNoise->objectName(), ui->AddNoise->isChecked());
+    settings.setValue(ui->NoiseAmp->objectName(), ui->NoiseAmp->text());
+
+    motorGraph->saveWinState();
+    simulationGraph->saveWinState();
+    controllerGraph->saveWinState();
+    debugGraph->saveWinState();
+    voltageGraph->saveWinState();
+    idigGraph->saveWinState();
     QWidget::closeEvent(event);
 }
 
@@ -214,9 +281,6 @@ void MainWindow::runFor(int num_steps)
     double Va = 0;
     double Vb = 0;
     double Vc = 0;
-    double oldVa = 0;
-    double oldVb = 0;
-    double oldVc = 0;
 
     if(num_steps<0)
         return;
@@ -224,7 +288,10 @@ void MainWindow::runFor(int num_steps)
     QList<QPointF> listIa, listIb, listIc, listIq, listId;
     QList<QPointF> listMFreq, listMPos, listContMPos;
     QList<QPointF> listCVa, listCVb, listCVc, listCVq, listCVd, listCIq, listCId, listCifw, listCivlim;
+    QList<QPointF> listVVd, listVVq, listVVq_bemf, listVVq_dueto_id, listVVd_dueto_iq, listVVq_dueto_Rq, listVVd_dueto_Rd, listVVLd, listVVLq;
+    QList<QPointF> listIdIq;
 
+    //PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
     for(int i = 0;i<num_steps; i++)
     {
         //routines that need calling every 10ms
@@ -232,15 +299,14 @@ void MainWindow::runFor(int num_steps)
         {
             m_old_time = (uint32_t)(m_time*100);
             Encoder::UpdateRotorFrequency(100);
+            PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
         }
 
         //routines that need calling every ms
         if((uint32_t)(m_time*1000) != m_old_ms_time)
         {
             m_old_ms_time = (uint32_t)(m_time*100);
-#ifdef HAS_FW_CALL_FROM_MS_TASK
-            PwmGeneration::runFWController();
-#endif
+            //not used at the moment but left in for future use
         }        
 
         g_input_angle = (uint16_t)((motor->getElecPosition()*TWO_PI_CONT)/360.0);
@@ -255,9 +321,16 @@ void MainWindow::runFor(int num_steps)
             g_il2_input = (Param::GetFloat(Param::il2gain)*motor->getIbSamp());
         }
 
+        if(ui->AddNoise->isChecked())
+        {
+            double noise = ui->NoiseAmp->text().toDouble();
+            g_il1_input += QRandomGenerator::global()->bounded(noise) - (noise/2);
+            g_il2_input += QRandomGenerator::global()->bounded(noise) - (noise/2);
+        }
+
         PwmGeneration::Run();
 
-        if(disablePWM)
+        if(disablePWM) //needed to allow OpeinInverter initialisation to complete
         {
             Va = 0;
             Va = 0;
@@ -270,14 +343,25 @@ void MainWindow::runFor(int num_steps)
             Vc = (m_Vdc/65536) * (FOC::DutyCycles[2]-32768);
         }
 
+        //add voltages to plot here so that we see the SVM waveforms
+        listCVa.append(QPointF(m_time, Va));
+        listCVb.append(QPointF(m_time, Vb));
+        listCVc.append(QPointF(m_time, Vc));
+
+        //remove space vector modulation
+        double offset = Va + Vb + Vc;
+        Va = Va - offset/3;
+        Vb = Vb - offset/3;
+        Vc = Vc - offset/3;
+
         //one period delay to simulate slow timer reload in target hardware
         if(ui->ExtraCycleDelay->isChecked())
-            motor->Step(oldVa,oldVb,oldVc);
+            motor->Step(m_oldVa,m_oldVb,m_oldVc);
         else
             motor->Step(Va,Vb,Vc);
-        oldVa = Va;
-        oldVb = Vb;
-        oldVb = Vb;
+        m_oldVa = Va;
+        m_oldVb = Vb;
+        m_oldVb = Vb;
 
 
         //motor->Step(0,0,0);
@@ -291,9 +375,10 @@ void MainWindow::runFor(int num_steps)
         listMPos.append(QPointF(m_time, motor->getMotorPosition()));
         listContMPos.append(QPointF(m_time, (360.0 * PwmGeneration::GetAngle())/TWO_PI_CONT));
 
-        listCVa.append(QPointF(m_time, Va));
-        listCVb.append(QPointF(m_time, Vb));
-        listCVc.append(QPointF(m_time, Vc));
+          //inlcude here to see sinusoidal waveforms that motor sees
+//        listCVa.append(QPointF(m_time, Va));
+//        listCVb.append(QPointF(m_time, Vb));
+//        listCVc.append(QPointF(m_time, Vc));
         listCVq.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::uq)));
         listCVd.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::ud)));
 
@@ -301,35 +386,61 @@ void MainWindow::runFor(int num_steps)
         listCId.append(QPointF(m_time, Param::GetFloat(Param::id)));
 
         listCifw.append(QPointF(m_time, Param::GetFloat(Param::ifw)));
-        listCivlim.append(QPointF(m_time, Param::GetFloat(Param::ivlim)));
+        listCivlim.append(QPointF(m_time, Param::GetFloat(Param::vlim)));
+
+        listVVd.append(QPointF(m_time, motor->getVd()));
+        listVVq.append(QPointF(m_time, motor->getVq()));
+        listVVq_bemf.append(QPointF(m_time, motor->getVq_bemf()));
+        listVVq_dueto_id.append(QPointF(m_time, motor->getVq_dueto_id()));
+        listVVd_dueto_iq.append(QPointF(m_time, motor->getVd_dueto_iq()));
+        listVVq_dueto_Rq.append(QPointF(m_time, motor->getVq_dueto_Rq()));
+        listVVd_dueto_Rd.append(QPointF(m_time, motor->getVd_dueto_Rd()));
+        listVVLd.append(QPointF(m_time, motor->getVLd()));
+        listVVLq.append(QPointF(m_time, motor->getVLq()));
+
+        listIdIq.append(QPointF(motor->getId(), motor->getIq()));
 
         m_time += m_timestep;
     }
 
-    motorGraph.addDataPoints(listIa, IA);
-    motorGraph.addDataPoints(listIb, IB);
-    motorGraph.addDataPoints(listIc, IC);
-    motorGraph.addDataPoints(listIq, IQ);
-    motorGraph.addDataPoints(listId, ID);
-    simulationGraph.addDataPoints(listMFreq, M_RPM);
-    simulationGraph.addDataPoints(listMPos, M_MOTOR_POS);
-    simulationGraph.addDataPoints(listContMPos, M_CONT_POS);
+    motorGraph->addDataPoints(listIa, IA);
+    motorGraph->addDataPoints(listIb, IB);
+    motorGraph->addDataPoints(listIc, IC);
+    motorGraph->addDataPoints(listIq, IQ);
+    motorGraph->addDataPoints(listId, ID);
+    simulationGraph->addDataPoints(listMFreq, M_RPM);
+    simulationGraph->addDataPoints(listMPos, M_MOTOR_POS);
+    simulationGraph->addDataPoints(listContMPos, M_CONT_POS);
 
-    controllerGraph.addDataPoints(listCVa, VA);
-    controllerGraph.addDataPoints(listCVb, VB);
-    controllerGraph.addDataPoints(listCVc, VC);
-    controllerGraph.addDataPoints(listCVq, VQ);
-    controllerGraph.addDataPoints(listCVd, VD);
+    controllerGraph->addDataPoints(listCVa, VA);
+    controllerGraph->addDataPoints(listCVb, VB);
+    controllerGraph->addDataPoints(listCVc, VC);
+    controllerGraph->addDataPoints(listCVq, VQ);
+    controllerGraph->addDataPoints(listCVd, VD);
 
-    debugGraph.addDataPoints(listCIq, C_IQ);
-    debugGraph.addDataPoints(listCId, C_ID);
-    debugGraph.addDataPoints(listCifw, C_IFW);
-    debugGraph.addDataPoints(listCivlim, C_IVLIM);
+    debugGraph->addDataPoints(listCIq, C_IQ);
+    debugGraph->addDataPoints(listCId, C_ID);
+    debugGraph->addDataPoints(listCifw, C_IFW);
+    debugGraph->addDataPoints(listCivlim, C_IVLIM);
 
-    motorGraph.updateGraph();
-    simulationGraph.updateGraph();
-    controllerGraph.updateGraph();
-    debugGraph.updateGraph();
+    voltageGraph->addDataPoints(listVVd, VVD);
+    voltageGraph->addDataPoints(listVVq, VVQ);
+    voltageGraph->addDataPoints(listVVq_bemf, VVQ_BEMF);
+    voltageGraph->addDataPoints(listVVq_dueto_id, VVQ_DT_ID);
+    voltageGraph->addDataPoints(listVVd_dueto_iq, VVD_DT_IQ);
+    voltageGraph->addDataPoints(listVVq_dueto_Rq, VVQ_DT_RQ);
+    voltageGraph->addDataPoints(listVVd_dueto_Rd, VVD_DT_RD);
+    voltageGraph->addDataPoints(listVVLd, VVLD);
+    voltageGraph->addDataPoints(listVVLq, VVLQ);
+
+    idigGraph->addDataPoints(listIdIq, IDIQAMPS);
+
+    motorGraph->updateGraph();
+    simulationGraph->updateGraph();
+    controllerGraph->updateGraph();
+    debugGraph->updateGraph();
+    voltageGraph->updateGraph();
+    idigGraph->updateGraph();
 }
 
 void MainWindow::on_vehicleWeight_editingFinished()
@@ -378,7 +489,6 @@ void MainWindow::on_Poles_editingFinished()
     m_Poles = ui->Poles->text().toDouble();
     Param::Set(Param::polepairs, FP_FROMINT(ui->Poles->text().toInt()));
     motor->setPoles(m_Poles);
-    calcFluxLinkage();
 }
 
 void MainWindow::on_FluxLinkage_editingFinished()
@@ -387,12 +497,6 @@ void MainWindow::on_FluxLinkage_editingFinished()
     Param::Set(Param::fluxlinkage, FP_FROMFLT(ui->FluxLinkage->text().toFloat()));
     motor->setFluxLinkage(m_fluxLinkage);
     PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat()); //make sure is recalculated
-}
-
-void MainWindow::on_Drag_editingFinished()
-{
-    m_drag = ui->Drag->text().toDouble();
-    motor->setDrag(m_drag);
 }
 
 void MainWindow::on_LoopFreq_editingFinished()
@@ -437,29 +541,26 @@ void MainWindow::on_pbStep_clicked()
 
 void MainWindow::on_pbRestart_clicked()
 {
+    motor->Restart();
+    int throt = ui->torqueDemand->text().toInt();
+    ui->torqueDemand->setText(QString::number(0));
+    PwmGeneration::SetOpmode(0);
+    PwmGeneration::SetOpmode(ui->opMode->text().toInt()); //reset controller integrators
+    PwmGeneration::SetTorquePercent(0);
+    runFor(6000); //allow controller to complete initialisation
+    ui->torqueDemand->setText(QString::number(throt));
+    PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
+    testStubsClearEncoder();
     m_time = 0;
     motor->Restart();
-    motorGraph.clearData();
-    simulationGraph.clearData();
-    controllerGraph.clearData();
-    debugGraph.clearData();
+    motorGraph->clearData();
+    simulationGraph->clearData();
+    controllerGraph->clearData();
+    debugGraph->clearData();
+    voltageGraph->clearData();
+    idigGraph->clearData();
 }
 
-void MainWindow::calcFluxLinkage(void)
-{
-    double fluxLink = ui->BaseVolts->text().toDouble() /(2.0 * M_PI * m_Poles * (ui->BaseFreq->text().toDouble()/60));
-    ui->CalcFluxLink->setText(QString::number(fluxLink,'g',2));
-}
-
-void MainWindow::on_BaseFreq_editingFinished()
-{
-    calcFluxLinkage();
-}
-
-void MainWindow::on_BaseVolts_editingFinished()
-{
-    calcFluxLinkage();
-}
 
 void MainWindow::on_torqueDemand_editingFinished()
 {
@@ -502,12 +603,6 @@ void MainWindow::on_CurrentKi_editingFinished()
     Param::Set(Param::curki, FP_FROMINT(ui->CurrentKi->text().toInt()));
 }
 
-void MainWindow::on_FluxLinkageDelta_editingFinished()
-{
-    m_fluxLinkageDelta = ui->FluxLinkageDelta->text().toDouble();
-    motor->setFluxLinkageDelta(m_fluxLinkageDelta);
-}
-
 void MainWindow::on_SyncAdv_editingFinished()
 {
     Param::SetInt(Param::syncadv, ui->SyncAdv->text().toInt());
@@ -525,11 +620,6 @@ void MainWindow::on_SyncDelay_editingFinished()
     motor->setSyncDelay(m_syncdelay);
 }
 
-void MainWindow::on_FWStart_editingFinished()
-{
-    Param::Set(Param::ffwstart, FP_FROMFLT(ui->FWStart->text().toFloat()));
-}
-
 void MainWindow::on_FreqMax_editingFinished()
 {
     Param::Set(Param::fmax, FP_FROMFLT(ui->FreqMax->text().toFloat()));
@@ -545,6 +635,44 @@ void MainWindow::on_FWKi_editingFinished()
     Param::Set(Param::fwki, FP_FROMINT(ui->FWKi->text().toInt()));
 }
 
+
+void MainWindow::on_SamplingPoint_editingFinished()
+{
+    m_samplingPoint = ui->SamplingPoint->text().toDouble()/100.0; //entered in %
+    motor->setSamplingPoint(m_samplingPoint);
+}
+
+void MainWindow::on_pbTransient_clicked()
+{
+    QString torque = ui->torqueDemand->text();
+    for(int i=0;i<2;i++)
+    {
+        ui->torqueDemand->setText("0");
+        runFor(int(1.0/m_timestep));
+        ui->torqueDemand->setText(torque);
+        runFor(int(1.0/m_timestep));
+    }
+}
+
+void MainWindow::on_SyncOfs_editingFinished()
+{
+    Param::SetInt(Param::syncofs, ui->SyncOfs->text().toInt());
+}
+
+void MainWindow::on_pbAccelCoast_clicked()
+{
+    QString torque = ui->torqueDemand->text();
+    runFor(int(2.0/m_timestep));
+    ui->torqueDemand->setText("0");
+    runFor(int(2.0/m_timestep));
+    ui->torqueDemand->setText(torque);
+}
+
+void MainWindow::on_FWMargin_editingFinished()
+{
+    Param::SetInt(Param::fwmargin, ui->FWMargin->text().toInt());
+}
+
 void MainWindow::on_VLimKp_editingFinished()
 {
     Param::Set(Param::vlimkp, FP_FROMINT(ui->VLimKp->text().toInt()));
@@ -555,8 +683,12 @@ void MainWindow::on_VLimKi_editingFinished()
     Param::Set(Param::vlimki, FP_FROMINT(ui->VLimKi->text().toInt()));
 }
 
-void MainWindow::on_SamplingPoint_editingFinished()
+void MainWindow::on_CurKiFrqGain_editingFinished()
 {
-    m_samplingPoint = ui->SamplingPoint->text().toDouble()/100.0; //entered in %
-    motor->setSamplingPoint(m_samplingPoint);
+    Param::Set(Param::curkifrqgain, FP_FROMINT(ui->CurKiFrqGain->text().toInt()));
+}
+
+void MainWindow::on_ICrit_editingFinished()
+{
+    Param::Set(Param::icrit, FP_FROMFLT(ui->ICrit->text().toFloat()));
 }

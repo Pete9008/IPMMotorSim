@@ -22,6 +22,7 @@
 
 #include <QMainWindow>
 #include "datagraph.h"
+#include "idiqgraph.h"
 #include "motormodel.h"
 
 
@@ -38,14 +39,19 @@ private:
     void runFor(int num_steps);
     void calcFluxLinkage(void);
 
-    DataGraph motorGraph;
-    DataGraph simulationGraph;
-    DataGraph controllerGraph;
-    DataGraph debugGraph;
+    DataGraph *motorGraph;
+    DataGraph *simulationGraph;
+    DataGraph *controllerGraph;
+    DataGraph *debugGraph;
+    DataGraph *voltageGraph;
+    IdIqGraph *idigGraph;
     MotorModel *motor;
     double m_time;
     uint32_t m_old_time;
     uint32_t m_old_ms_time;
+    double m_oldVa;
+    double m_oldVb;
+    double m_oldVc;
 
     double m_wheelSize;
     double m_vehicleWeight;
@@ -56,7 +62,6 @@ private:
     double m_Rs;
     double m_Poles;
     double m_fluxLinkage;
-    double m_fluxLinkageDelta;
     double m_syncdelay;
     double m_samplingPoint;
 
@@ -87,8 +92,6 @@ private slots:
 
     void on_FluxLinkage_editingFinished();
 
-    void on_Drag_editingFinished();
-
     void on_LoopFreq_editingFinished();
 
     void on_pbRunFor10s_clicked();
@@ -104,10 +107,6 @@ private slots:
     void on_Rs_editingFinished();
 
     void on_Poles_editingFinished();
-
-    void on_BaseFreq_editingFinished();
-
-    void on_BaseVolts_editingFinished();
 
     void on_torqueDemand_editingFinished();
 
@@ -125,15 +124,11 @@ private slots:
 
     void on_CurrentKi_editingFinished();
 
-    void on_FluxLinkageDelta_editingFinished();
-
     void on_SyncAdv_editingFinished();
 
     void on_LqMinusLd_editingFinished();
 
     void on_SyncDelay_editingFinished();
-
-    void on_FWStart_editingFinished();
 
     void on_FreqMax_editingFinished();
 
@@ -141,11 +136,23 @@ private slots:
 
     void on_FWKi_editingFinished();
 
+    void on_SamplingPoint_editingFinished();
+
+    void on_pbTransient_clicked();
+
+    void on_SyncOfs_editingFinished();
+
+    void on_pbAccelCoast_clicked();
+
+    void on_FWMargin_editingFinished();
+
     void on_VLimKp_editingFinished();
 
     void on_VLimKi_editingFinished();
 
-    void on_SamplingPoint_editingFinished();
+    void on_CurKiFrqGain_editingFinished();
+
+    void on_ICrit_editingFinished();
 
 private:
     Ui::MainWindow *ui;

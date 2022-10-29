@@ -36,14 +36,18 @@ QT_BEGIN_NAMESPACE
 class QGestureEvent;
 QT_END_NAMESPACE
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 QT_CHARTS_USE_NAMESPACE
+#else
+QT_USE_NAMESPACE
+#endif
 
 //![1]
 class Chart : public QChart
 //![1]
 {
 public:
-    explicit Chart(QGraphicsItem *parent = 0, Qt::WindowFlags wFlags = 0);
+    explicit Chart(QGraphicsItem *parent = 0, Qt::WindowFlags wFlags = Qt::WindowFlags());
     ~Chart();
 
 protected:

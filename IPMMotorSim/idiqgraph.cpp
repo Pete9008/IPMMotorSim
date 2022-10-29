@@ -17,9 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TESTSTUBS_H
-#define TESTSTUBS_H
+#include <QtMath>
+#include "idiqgraph.h"
+#include "params.h"
 
-void testStubsClearEncoder(void);
+IdIqGraph::IdIqGraph(QString name, QWidget *parent) : DataGraph (name, parent)
+{
+    addSeries("Is (A)", 10);
+}
 
-#endif // TESTSTUBS_H
+void IdIqGraph::updateGraph(void)
+{
+    double id, iq;
+    QList<QPointF> list;
+
+    //add is circle
+    double is = Param::GetFloat(Param::throtcur) *100;
+    for(double ang = 0;ang < 360;ang++)
+    {
+        id = is * qCos(qDegreesToRadians(ang));
+        iq = is * qSin(qDegreesToRadians(ang));
+        list.append(QPointF(id, iq));
+    }
+    addDataPoints(list, 10);
+
+    DataGraph::updateGraph();
+
+    is = is * 1.1;
+    DataGraph::updateXaxis(-is, is);
+    DataGraph::updateYaxis(-is, is);
+}

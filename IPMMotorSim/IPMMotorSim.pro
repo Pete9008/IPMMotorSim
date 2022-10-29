@@ -50,7 +50,8 @@ SOURCES += \
     stm32-sine/libopeninv/src/foc.cpp \
     teststubs.c \
     cpp_teststubs.cpp \
-    stm32-sine/src/pwmgeneration.cpp
+    stm32-sine/src/pwmgeneration.cpp \
+    idiqgraph.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -59,7 +60,8 @@ HEADERS += \
     datagraph.h \
     motormodel.h \
     stm32-sine/include/pwmgeneration.h \
-    teststubs.h
+    teststubs.h \
+    idiqgraph.h
 
 FORMS += \
         mainwindow.ui
