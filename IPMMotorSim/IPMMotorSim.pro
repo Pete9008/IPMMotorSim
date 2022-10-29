@@ -51,7 +51,8 @@ SOURCES += \
     teststubs.c \
     cpp_teststubs.cpp \
     stm32-sine/src/pwmgeneration.cpp \
-    idiqgraph.cpp
+    idiqgraph.cpp \
+    terminal_stubs.cpp
 
 HEADERS += \
         mainwindow.h \
