@@ -38,6 +38,8 @@ void MotorModel::Restart(void)
     m_IcSamp = 0;
     m_Id = 0;
     m_Iq = 0;
+    m_Power = 0;
+    m_Torque = 0;
 }
 
 void MotorModel::Step(double Va, double Vb, double Vc)
@@ -78,7 +80,7 @@ void MotorModel::Step(double Va, double Vb, double Vc)
     m_Ib = (-Ialpha + (qSqrt(3.0) * Ibeta)) / 2.0;
     m_Ic = (-Ialpha - (qSqrt(3.0) * Ibeta)) / 2.0;
 
-    double torque = (3.0/2.0) * m_Poles * ((m_FluxLink * m_Iq) + ((m_Ld - m_Lq) * m_Id * m_Iq));
+    m_Torque = (3.0/2.0) * m_Poles * ((m_FluxLink * m_Iq) + ((m_Ld - m_Lq) * m_Id * m_Iq));
 
     //This is a very simple model just lumping everything together in a single vehicle mass
     //A better approach would be to have a fast and slow calculation
@@ -86,10 +88,11 @@ void MotorModel::Step(double Va, double Vb, double Vc)
     //The fast calculation kicks in on direction changes produces a position calculated just from the inertia for the motor and geartrain.  The
     //position delta from this component would be limited by a configurable driveshaft angular play parameter.
     //If added this would allow driveline shunt to be simulated by the model
-    torque = (torque * m_Ratio) / m_WheelSize;//m_Wheelsize is radius (in m) to give N here
-    double accel = torque/m_Mass;
+    double wheelTorque = (m_Torque * m_Ratio) / m_WheelSize;//m_Wheelsize is radius (in m) to give N here
+    double accel = wheelTorque/m_Mass;
     m_Speed = m_Speed + (accel * m_Timestep);
     m_Frequency = (m_Speed / (2.0 * M_PI * m_WheelSize)) * m_Ratio;
+    m_Power = 2.0 * M_PI * m_Frequency * m_Torque;
 
     double posDelta = m_Frequency * m_Timestep * (360.0 * m_Poles);
     m_Position = m_Position + posDelta;

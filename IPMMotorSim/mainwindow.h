@@ -45,6 +45,7 @@ private:
     DataGraph *debugGraph;
     DataGraph *voltageGraph;
     IdIqGraph *idigGraph;
+    DataGraph *powerGraph;
     MotorModel *motor;
     double m_time;
     uint32_t m_old_time;
@@ -153,6 +154,22 @@ private slots:
     void on_CurKiFrqGain_editingFinished();
 
     void on_ICrit_editingFinished();
+
+    void on_cb_OpPoint_toggled(bool checked);
+
+    void on_cb_Simulation_toggled(bool checked);
+
+    void on_cb_ContVolt_toggled(bool checked);
+
+    void on_cb_ContCurr_toggled(bool checked);
+
+    void on_cb_MotVolt_toggled(bool checked);
+
+    void on_cb_MotCurr_toggled(bool checked);
+
+    void on_cb_PowTorqTime_toggled(bool checked);
+
+    void on_rb_Speed_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;

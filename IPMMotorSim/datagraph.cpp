@@ -20,7 +20,6 @@
 #include "datagraph.h"
 #include <QtCore/QRandomGenerator>
 #include <QtCore/QtMath>
-#include <QtCharts/QValueAxis>
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QSettings>
@@ -31,8 +30,10 @@ DataGraph::DataGraph(QString name, QWidget *parent) : QMainWindow(parent)
     mName = name;
     QSettings settings("OpenInverter", "IPMMotorSim");
 
-    minY =  std::numeric_limits<double>::max();
-    maxY =  std::numeric_limits<double>::lowest();
+    minY_L =  std::numeric_limits<double>::max();
+    maxY_L =  std::numeric_limits<double>::lowest();
+    minY_R =  std::numeric_limits<double>::max();
+    maxY_R =  std::numeric_limits<double>::lowest();
     minX =  std::numeric_limits<double>::max();
     maxX =  std::numeric_limits<double>::lowest();
 
@@ -42,6 +43,13 @@ DataGraph::DataGraph(QString name, QWidget *parent) : QMainWindow(parent)
     m_chartView = new ChartView(m_chart);
     m_chartView->setRenderHint(QPainter::Antialiasing);
 
+    m_axisL = new QValueAxis;
+    m_axisR = new QValueAxis;
+    m_axisX = new QValueAxis;
+    m_chart->addAxis(m_axisX, Qt::AlignBottom);
+    m_chart->addAxis(m_axisL, Qt::AlignLeft);
+    m_chart->addAxis(m_axisR, Qt::AlignRight);
+
     setCentralWidget(m_chartView);
     if(!restoreGeometry(settings.value(mName + "/geometry").toByteArray()) || !restoreState(settings.value(mName + "/windowState").toByteArray()))
     {
@@ -50,6 +58,13 @@ DataGraph::DataGraph(QString name, QWidget *parent) : QMainWindow(parent)
     grabGesture(Qt::PanGesture);
     grabGesture(Qt::PinchGesture);
     show();
+}
+
+void DataGraph::setAxisText(QString x, QString left, QString right)
+{
+    m_axisX->setTitleText(x);
+    m_axisL->setTitleText(left);
+    m_axisR->setTitleText(right);
 }
 
 void DataGraph::saveWinState()
@@ -69,7 +84,7 @@ DataGraph::~DataGraph()
     clearData();
 }
 
-void DataGraph::addSeries(QString legend, int key)
+void DataGraph::addSeries(QString legend, axisSel axis, int key)
 {
     if(m_series.contains(key))
         return;
@@ -77,6 +92,7 @@ void DataGraph::addSeries(QString legend, int key)
     QList<QPointF> *series = new QList<QPointF>;
     m_series[key] = series;
     m_legends[key] = legend;
+    m_axis[key] = axis;
 }
 
 
@@ -85,8 +101,16 @@ void DataGraph::addDataPoint(double x, double y, int key)
 {
     if(m_series.contains(key))
     {
-        if(y<minY) minY = y;
-        if(y>maxY) maxY = y;
+        if( m_axis[key] == left)
+        {
+            if(y<minY_L) minY_L = y;
+            if(y>maxY_L) maxY_L = y;
+        }
+        else
+        {
+            if(y<minY_R) minY_R = y;
+            if(y>maxY_R) maxY_R = y;
+        }
         if(x<minX) minX = x;
         if(x>maxX) maxX = x;
 
@@ -103,8 +127,16 @@ void DataGraph::addDataPoints(QList<QPointF> pointList, int key)
         {
             QPointF p = i.next();
 
-            if(p.y()<minY) minY = p.y();
-            if(p.y()>maxY) maxY = p.y();
+            if( m_axis[key] == left)
+            {
+                if(p.y()<minY_L) minY_L = p.y();
+                if(p.y()>maxY_L) maxY_L = p.y();
+            }
+            else
+            {
+                if(p.y()<minY_R) minY_R = p.y();
+                if(p.y()>maxY_R) maxY_R = p.y();
+            }
             if(p.x()<minX) minX = p.x();
             if(p.x()>maxX) maxX = p.x();
         }
@@ -128,26 +160,34 @@ void DataGraph::updateGraph(void)
             series->setColor(m_colours[i.key()]);
         if(m_opacity.contains(i.key())) //if we have an opacity then override standard one
             series->setOpacity(m_opacity[i.key()]);
+        series->attachAxis(m_axisX);
+        if(m_axis[i.key()] == left)
+            series->attachAxis(m_axisL);
+        else
+            series->attachAxis(m_axisR);
     }
-    m_chart->createDefaultAxes();
-    m_chart->axisX()->setRange(minX, maxX);
-    m_chart->axisY()->setRange(minY, maxY);
+
+    m_axisX->setRange(minX, maxX);
+    m_axisL->setRange(minY_L, maxY_L);
+    m_axisR->setRange(minY_R, maxY_R);
 }
 
 void DataGraph::updateXaxis(double min, double max)
 {
-    m_chart->axisX()->setRange(min, max);
+    m_axisX->setRange(minX, maxX);
 }
 
-void DataGraph::updateYaxis(double min, double max)
+void DataGraph::updateLeftYaxis(double min, double max)
 {
-    m_chart->axisY()->setRange(min, max);
+    m_axisL->setRange(minY_L, maxY_L);
 }
 
 void DataGraph::clearData(void)
 {
-    minY =  std::numeric_limits<double>::max();
-    maxY =  std::numeric_limits<double>::lowest();
+    minY_L =  std::numeric_limits<double>::max();
+    maxY_L =  std::numeric_limits<double>::lowest();
+    minY_R =  std::numeric_limits<double>::max();
+    maxY_R =  std::numeric_limits<double>::lowest();
     minX =  std::numeric_limits<double>::max();
     maxX =  std::numeric_limits<double>::lowest();
     m_chart->removeAllSeries();
