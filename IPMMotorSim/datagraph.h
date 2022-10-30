@@ -22,8 +22,11 @@
 
 #include <QMainWindow>
 #include <QtCharts/QLineSeries>
+#include <QtCharts/QValueAxis>
 #include "chartview.h"
 #include "chart.h"
+
+enum axisSel {left,right};
 
 class DataGraph : public QMainWindow
 {
@@ -32,15 +35,16 @@ public:
     explicit DataGraph(QString name, QWidget *parent = nullptr);
     ~DataGraph();
     void saveWinState();
-    void addSeries(QString legend, int key);
+    void addSeries(QString legend, axisSel axis, int key);
     void addDataPoint(double x, double y, int key);
     void addDataPoints(QList<QPointF> pointList, int key);
     void clearData();
     void updateGraph(void);
     void updateXaxis(double min, double max);
-    void updateYaxis(double min, double max);
+    void updateLeftYaxis(double min, double max);
     void setColour(QColor colour, int key);
     void setOpacity(qreal opacity, int key);
+    void setAxisText(QString x, QString left, QString right);
 
 private:
     Chart *m_chart;
@@ -49,9 +53,15 @@ private:
     QMap<int, QString> m_legends;
     QMap<int, QColor> m_colours;
     QMap<int, qreal> m_opacity;
+    QMap<int, axisSel> m_axis;
 
-    double minX, maxX, minY, maxY;
+    double minX, maxX, minY_L, maxY_L, minY_R, maxY_R;
     QString mName;
+
+    QValueAxis *m_axisL;
+    QValueAxis *m_axisR;
+    QValueAxis *m_axisX;
+
 
 signals:
 

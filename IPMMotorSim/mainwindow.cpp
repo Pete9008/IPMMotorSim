@@ -33,7 +33,7 @@
 #define GPIOC 2
 #include "anain.h"
 
-//PWM graph
+//Current graph
 #define IA 1
 #define IB 2
 #define IC 3
@@ -66,6 +66,10 @@
 #define VVD_DT_RD 7
 #define VVLD 8
 #define VVLQ 9
+
+//Power/Torque graph
+#define POWER 6
+#define TORQUE 7
 
 //Op point graph
 #define IDIQAMPS 2
@@ -104,6 +108,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if(settings.contains(ui->ExtraCycleDelay->objectName())) ui->ExtraCycleDelay->setChecked(settings.value(ui->ExtraCycleDelay->objectName()).toBool());
     if(settings.contains(ui->AddNoise->objectName())) ui->AddNoise->setChecked(settings.value(ui->AddNoise->objectName()).toBool());
     if(settings.contains(ui->NoiseAmp->objectName())) ui->NoiseAmp->setText(settings.value(ui->NoiseAmp->objectName(),QString()).toString());
+    if(settings.contains(ui->runTime->objectName())) ui->runTime->setText(settings.value(ui->runTime->objectName(),QString()).toString());
 
     motorGraph = new DataGraph("motor", this);
     simulationGraph = new DataGraph("sim", this);
@@ -111,6 +116,9 @@ MainWindow::MainWindow(QWidget *parent) :
     debugGraph = new DataGraph("debug", this);
     voltageGraph = new DataGraph("voltage", this);
     idigGraph = new IdIqGraph("idig", this);
+    powerGraph = new DataGraph("power", this);
+
+    motorGraph->hide();//not sure why needed but otherwise always up?
 
     ANA_IN_CONFIGURE(ANA_IN_LIST);
 
@@ -159,60 +167,86 @@ MainWindow::MainWindow(QWidget *parent) :
     m_oldVc = 0;
 
     motorGraph->setWindowTitle("Motor Currents");
-    motorGraph->addSeries("Ia (A)", IA);
-    motorGraph->addSeries("Ib (A)", IB);
-    motorGraph->addSeries("Ic (A)", IC);
-    motorGraph->addSeries("Iq (A)", IQ);
+    motorGraph->setAxisText("", "Amps (A)", "");
+    motorGraph->addSeries("Ia (A)", left, IA);
+    motorGraph->addSeries("Ib (A)", left, IB);
+    motorGraph->addSeries("Ic (A)", left, IC);
+    motorGraph->addSeries("Iq (A)", left, IQ);
     motorGraph->setColour(Qt::blue, IQ);
-    motorGraph->addSeries("Id (A)", ID);
+    motorGraph->addSeries("Id (A)", left, ID);
     motorGraph->setColour(Qt::red, ID);
-    motorGraph->show();
+    if(settings.contains(ui->cb_MotCurr->objectName())) ui->cb_MotCurr->setChecked(settings.value(ui->cb_MotCurr->objectName()).toBool());
 
     simulationGraph->setWindowTitle("Simulation Data");
-    simulationGraph->addSeries("Motor Position (degrees)", M_MOTOR_POS);
+    simulationGraph->setAxisText("", "Angle (Degrees)", "Speed (Hz)");
+    simulationGraph->addSeries("Motor Position (degrees)", left, M_MOTOR_POS);
     simulationGraph->setOpacity(0.25, M_MOTOR_POS);
-    simulationGraph->addSeries("Controller Position (degrees)", M_CONT_POS);
+    simulationGraph->addSeries("Controller Position (degrees)", left, M_CONT_POS);
     simulationGraph->setOpacity(0.25, M_CONT_POS);
-    simulationGraph->addSeries("Motor Elec Speed (Hz)", M_RPM);
+    simulationGraph->addSeries("Motor Elec Speed (Hz)", right, M_RPM);
     simulationGraph->setColour(Qt::blue, M_RPM);
-    simulationGraph->show();
+    if(settings.contains(ui->cb_Simulation->objectName())) ui->cb_Simulation->setChecked(settings.value(ui->cb_Simulation->objectName()).toBool());
 
     controllerGraph->setWindowTitle("Controller Voltages");
-    controllerGraph->addSeries("Va (V)", VA);
-    controllerGraph->addSeries("Vb (V)", VB);
-    controllerGraph->addSeries("Vc (V)", VC);
-    controllerGraph->addSeries("Vq (V)", VQ);
+    controllerGraph->setAxisText("", "Volts (V)", "");
+    controllerGraph->addSeries("Va (V)", left, VA);
+    controllerGraph->addSeries("Vb (V)", left, VB);
+    controllerGraph->addSeries("Vc (V)", left, VC);
+    controllerGraph->addSeries("Vq (V)", left, VQ);
     controllerGraph->setColour(Qt::blue, VQ);
-    controllerGraph->addSeries("Vd (V)", VD);
+    controllerGraph->addSeries("Vd (V)", left, VD);
     controllerGraph->setColour(Qt::red, VD);
-    controllerGraph->show();
+    if(settings.contains(ui->cb_ContVolt->objectName())) ui->cb_ContVolt->setChecked(settings.value(ui->cb_ContVolt->objectName()).toBool());
 
     debugGraph->setWindowTitle("Controller Currents");
-    debugGraph->addSeries("Iq (A)", C_IQ);
+    debugGraph->setAxisText("", "Amps (A)", "");
+    debugGraph->addSeries("Iq (A)", left, C_IQ);
     debugGraph->setColour(Qt::blue, C_IQ);
-    debugGraph->addSeries("Id (A)", C_ID);
+    debugGraph->addSeries("Id (A)", left, C_ID);
     debugGraph->setColour(Qt::red, C_ID);
-    debugGraph->addSeries("Ifw (A)", C_IFW);
-    debugGraph->addSeries("Throttle Reduction (%)", C_IVLIM);
-    debugGraph->show();
+    debugGraph->addSeries("Ifw (A)", left, C_IFW);
+    debugGraph->addSeries("Throttle Reduction (%)", right, C_IVLIM);
+    if(settings.contains(ui->cb_ContCurr->objectName())) ui->cb_ContCurr->setChecked(settings.value(ui->cb_ContCurr->objectName()).toBool());
 
     voltageGraph->setWindowTitle("Motor Voltages");
-    voltageGraph->addSeries("Vd (V)", VVD);
+    voltageGraph->setAxisText("", "Volts (V)", "");
+    voltageGraph->addSeries("Vd (V)", left, VVD);
     voltageGraph->setColour(Qt::red, VVD);
-    voltageGraph->addSeries("Vq (V)", VVQ);
+    voltageGraph->addSeries("Vq (V)", left, VVQ);
     voltageGraph->setColour(Qt::blue, VVQ);
-    voltageGraph->addSeries("Vq_BEMF (V)", VVQ_BEMF);
-    voltageGraph->addSeries("Vq_LdId (V)", VVQ_DT_ID);
-    voltageGraph->addSeries("Vd_LqIq (V)", VVD_DT_IQ);
-    voltageGraph->addSeries("Vq_RqIq (V)", VVQ_DT_RQ);
-    voltageGraph->addSeries("Vd_RdIq (V)", VVD_DT_RD);
-    voltageGraph->addSeries("VLd (V)", VVLD);
-    voltageGraph->addSeries("VLq (V)", VVLQ);
-    voltageGraph->show();
+    voltageGraph->addSeries("Vq_BEMF (V)", left, VVQ_BEMF);
+    voltageGraph->addSeries("Vq_LdId (V)", left, VVQ_DT_ID);
+    voltageGraph->addSeries("Vd_LqIq (V)", left, VVD_DT_IQ);
+    voltageGraph->addSeries("Vq_RqIq (V)", left, VVQ_DT_RQ);
+    voltageGraph->addSeries("Vd_RdIq (V)", left, VVD_DT_RD);
+    voltageGraph->addSeries("VLd (V)", left, VVLD);
+    voltageGraph->addSeries("VLq (V)", left, VVLQ);
+    if(settings.contains(ui->cb_MotVolt->objectName())) ui->cb_MotVolt->setChecked(settings.value(ui->cb_MotVolt->objectName()).toBool());
 
     idigGraph->setWindowTitle("Operating Point");
-    idigGraph->addSeries("I (A)", IDIQAMPS);
-    idigGraph->show();
+    idigGraph->setAxisText("Id (A)", "Iq (A)", "");
+    idigGraph->addSeries("I (A)", left, IDIQAMPS);
+    if(settings.contains(ui->cb_OpPoint->objectName())) ui->cb_OpPoint->setChecked(settings.value(ui->cb_OpPoint->objectName()).toBool());
+
+    powerGraph->setWindowTitle("Power/Torque");
+    powerGraph->setAxisText("Time (s)", "Power (kW)", "Torque (Nm)");
+    powerGraph->addSeries("Power (kW)", left, POWER);
+    powerGraph->addSeries("Torque (Nm)", right, TORQUE);
+    if(settings.contains(ui->cb_PowTorqTime->objectName())) ui->cb_PowTorqTime->setChecked(settings.value(ui->cb_PowTorqTime->objectName()).toBool());
+
+    if(settings.contains(ui->rb_Speed->objectName()))
+    {
+        if(settings.value(ui->rb_Speed->objectName()).toBool())
+        {
+            ui->rb_Speed->setChecked(true);
+            powerGraph->setAxisText("Shaft Speed (rpm)", "Power (kW)", "Torque (Nm)");
+        }
+        else
+        {
+            ui->rb_Time->setChecked(true);
+            powerGraph->setAxisText("Time (s)", "Power (kW)", "Torque (Nm)");
+        }
+    }
 
     //following block copied from OpenInverter - probably not needed
     Param::SetInt(Param::version, 4); //backward compatibility
@@ -266,6 +300,16 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue(ui->ExtraCycleDelay->objectName(), ui->ExtraCycleDelay->isChecked());
     settings.setValue(ui->AddNoise->objectName(), ui->AddNoise->isChecked());
     settings.setValue(ui->NoiseAmp->objectName(), ui->NoiseAmp->text());
+    settings.setValue(ui->runTime->objectName(), ui->runTime->text());
+
+    settings.setValue(ui->cb_ContCurr->objectName(), ui->cb_ContCurr->isChecked());
+    settings.setValue(ui->cb_ContVolt->objectName(), ui->cb_ContVolt->isChecked());
+    settings.setValue(ui->cb_MotCurr->objectName(), ui->cb_MotCurr->isChecked());
+    settings.setValue(ui->cb_MotVolt->objectName(), ui->cb_MotVolt->isChecked());
+    settings.setValue(ui->cb_OpPoint->objectName(), ui->cb_OpPoint->isChecked());
+    settings.setValue(ui->cb_PowTorqTime->objectName(), ui->cb_PowTorqTime->isChecked());
+    settings.setValue(ui->cb_Simulation->objectName(), ui->cb_Simulation->isChecked());
+    settings.setValue(ui->rb_Speed->objectName(), ui->rb_Speed->isChecked());
 
     motorGraph->saveWinState();
     simulationGraph->saveWinState();
@@ -273,6 +317,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     debugGraph->saveWinState();
     voltageGraph->saveWinState();
     idigGraph->saveWinState();
+    powerGraph->saveWinState();
     QWidget::closeEvent(event);
 }
 
@@ -290,6 +335,7 @@ void MainWindow::runFor(int num_steps)
     QList<QPointF> listCVa, listCVb, listCVc, listCVq, listCVd, listCIq, listCId, listCifw, listCivlim;
     QList<QPointF> listVVd, listVVq, listVVq_bemf, listVVq_dueto_id, listVVd_dueto_iq, listVVq_dueto_Rq, listVVd_dueto_Rd, listVVLd, listVVLq;
     QList<QPointF> listIdIq;
+    QList<QPointF> listPower, listTorque;
 
     //PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
     for(int i = 0;i<num_steps; i++)
@@ -400,6 +446,17 @@ void MainWindow::runFor(int num_steps)
 
         listIdIq.append(QPointF(motor->getId(), motor->getIq()));
 
+        if(ui->rb_Speed->isChecked())
+        {
+            listPower.append(QPointF(motor->getMotorFreq()*60, motor->getPower()/1000));
+            listTorque.append(QPointF(motor->getMotorFreq()*60, motor->getTorque()));
+        }
+        else
+        {
+            listPower.append(QPointF(m_time, motor->getPower()/1000));
+            listTorque.append(QPointF(m_time, motor->getTorque()));
+        }
+
         m_time += m_timestep;
     }
 
@@ -408,6 +465,7 @@ void MainWindow::runFor(int num_steps)
     motorGraph->addDataPoints(listIc, IC);
     motorGraph->addDataPoints(listIq, IQ);
     motorGraph->addDataPoints(listId, ID);
+
     simulationGraph->addDataPoints(listMFreq, M_RPM);
     simulationGraph->addDataPoints(listMPos, M_MOTOR_POS);
     simulationGraph->addDataPoints(listContMPos, M_CONT_POS);
@@ -435,12 +493,16 @@ void MainWindow::runFor(int num_steps)
 
     idigGraph->addDataPoints(listIdIq, IDIQAMPS);
 
-    motorGraph->updateGraph();
-    simulationGraph->updateGraph();
-    controllerGraph->updateGraph();
-    debugGraph->updateGraph();
-    voltageGraph->updateGraph();
-    idigGraph->updateGraph();
+    powerGraph->addDataPoints(listPower, POWER);
+    powerGraph->addDataPoints(listTorque, TORQUE);
+
+    if(ui->cb_MotCurr->isChecked()) motorGraph->updateGraph();
+    if(ui->cb_Simulation->isChecked()) simulationGraph->updateGraph();
+    if(ui->cb_ContVolt->isChecked()) controllerGraph->updateGraph();
+    if(ui->cb_ContCurr->isChecked()) debugGraph->updateGraph();
+    if(ui->cb_MotVolt->isChecked()) voltageGraph->updateGraph();
+    if(ui->cb_OpPoint->isChecked()) idigGraph->updateGraph();
+    if(ui->cb_PowTorqTime->isChecked()) powerGraph->updateGraph();
 }
 
 void MainWindow::on_vehicleWeight_editingFinished()
@@ -559,6 +621,7 @@ void MainWindow::on_pbRestart_clicked()
     debugGraph->clearData();
     voltageGraph->clearData();
     idigGraph->clearData();
+    powerGraph->clearData();
 }
 
 
@@ -691,4 +754,90 @@ void MainWindow::on_CurKiFrqGain_editingFinished()
 void MainWindow::on_ICrit_editingFinished()
 {
     Param::Set(Param::icrit, FP_FROMFLT(ui->ICrit->text().toFloat()));
+}
+
+void MainWindow::on_cb_OpPoint_toggled(bool checked)
+{
+    if(checked)
+    {
+        idigGraph->updateGraph();
+        idigGraph->show();
+    }
+    else
+        idigGraph->hide();
+}
+
+void MainWindow::on_cb_Simulation_toggled(bool checked)
+{
+    if(checked)
+    {
+        simulationGraph->updateGraph();
+        simulationGraph->show();
+    }
+    else
+        simulationGraph->hide();
+}
+
+void MainWindow::on_cb_ContVolt_toggled(bool checked)
+{
+    if(checked)
+    {
+        controllerGraph->updateGraph();
+        controllerGraph->show();
+    }
+    else
+        controllerGraph->hide();
+}
+
+void MainWindow::on_cb_ContCurr_toggled(bool checked)
+{
+    if(checked)
+    {
+        debugGraph->updateGraph();
+        debugGraph->show();
+    }
+    else
+        debugGraph->hide();
+}
+
+void MainWindow::on_cb_MotVolt_toggled(bool checked)
+{
+    if(checked)
+    {
+        voltageGraph->updateGraph();
+        voltageGraph->show();
+    }
+    else
+        voltageGraph->hide();
+}
+
+void MainWindow::on_cb_MotCurr_toggled(bool checked)
+{
+    if(checked)
+    {
+        motorGraph->updateGraph();
+        motorGraph->show();
+    }
+    else
+        motorGraph->hide();
+}
+
+void MainWindow::on_cb_PowTorqTime_toggled(bool checked)
+{
+    if(checked)
+    {
+        powerGraph->updateGraph();
+        powerGraph->show();
+    }
+    else
+        powerGraph->hide();
+}
+
+void MainWindow::on_rb_Speed_toggled(bool checked)
+{
+    powerGraph->clearData(); //need to restart as data arrays not right for new mode
+    if(checked)
+        powerGraph->setAxisText("Shaft Speed (rpm)", "Power (kW)", "Torque (Nm)");
+    else
+        powerGraph->setAxisText("Time (s)", "Power (kW)", "Torque (Nm)");
 }

@@ -62,6 +62,9 @@ public:
     double getVd_dueto_Rd(void) {return m_Vd_dueto_Rd;}
     double getVLd(void) {return m_VLd;}
     double getVLq(void) {return m_VLq;}
+    double getPower(void) {return m_Power;}
+    double getTorque(void) {return m_Torque;}
+
 
 private:
     double m_WheelSize;
@@ -83,6 +86,8 @@ private:
     double m_IaSamp, m_IbSamp, m_IcSamp;
     double m_Id, m_Iq;
     double m_Speed; // m/s
+    double m_Power;
+    double m_Torque; //motor torque
 
     double m_Vd;
     double m_Vq;

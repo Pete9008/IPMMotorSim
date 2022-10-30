@@ -23,7 +23,7 @@
 
 IdIqGraph::IdIqGraph(QString name, QWidget *parent) : DataGraph (name, parent)
 {
-    addSeries("Is (A)", 10);
+    addSeries("Is (A)",left, 10);
 }
 
 void IdIqGraph::updateGraph(void)
@@ -45,5 +45,5 @@ void IdIqGraph::updateGraph(void)
 
     is = is * 1.1;
     DataGraph::updateXaxis(-is, is);
-    DataGraph::updateYaxis(-is, is);
+    DataGraph::updateLeftYaxis(-is, is);
 }
