@@ -27,6 +27,7 @@
 #include "params.h"
 #include "inc_encoder.h"
 #include "teststubs.h"
+#include "my_math.h"
 
 #define GPIOA 0
 #define GPIOB 1
@@ -109,6 +110,8 @@ MainWindow::MainWindow(QWidget *parent) :
     if(settings.contains(ui->AddNoise->objectName())) ui->AddNoise->setChecked(settings.value(ui->AddNoise->objectName()).toBool());
     if(settings.contains(ui->NoiseAmp->objectName())) ui->NoiseAmp->setText(settings.value(ui->NoiseAmp->objectName(),QString()).toString());
     if(settings.contains(ui->runTime->objectName())) ui->runTime->setText(settings.value(ui->runTime->objectName(),QString()).toString());
+    if(settings.contains(ui->RoadGradient->objectName())) ui->RoadGradient->setText(settings.value(ui->RoadGradient->objectName(),QString()).toString());
+    if(settings.contains(ui->ThrotRamps->objectName())) ui->ThrotRamps->setChecked(settings.value(ui->ThrotRamps->objectName()).toBool());
 
     motorGraph = new DataGraph("motor", this);
     simulationGraph = new DataGraph("sim", this);
@@ -144,7 +147,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_wheelSize = ui->wheelSize->text().toDouble();
     m_vehicleWeight = ui->vehicleWeight->text().toDouble();
     m_gearRatio = ui->gearRatio->text().toDouble();
-    m_drag = 0; //not used
     m_Lq = ui->Lq->text().toDouble()/1000; //entered in mH
     m_Ld = ui->Ld->text().toDouble()/1000; //entered in mH
     m_Rs = ui->Rs->text().toDouble();
@@ -152,11 +154,13 @@ MainWindow::MainWindow(QWidget *parent) :
     m_fluxLinkage = ui->FluxLinkage->text().toDouble()/1000; //entered in mWeber
     m_syncdelay = ui->SyncDelay->text().toDouble()/1000000; //entered in uS
     m_samplingPoint = ui->SamplingPoint->text().toDouble()/100.0; //entered in %
+    m_roadGradient = ui->RoadGradient->text().toDouble()/100.0; //entered in %
+    m_runTime = ui->runTime->text().toDouble();
 
     m_timestep = 1.0 / ui->LoopFreq->text().toDouble();
     m_Vdc = ui->Vdc->text().toDouble();
 
-    motor = new MotorModel(m_wheelSize,m_gearRatio,m_drag,m_vehicleWeight,m_Lq,m_Ld,m_Rs,m_Poles,m_fluxLinkage,m_timestep,m_syncdelay,m_samplingPoint);
+    motor = new MotorModel(m_wheelSize,m_gearRatio,m_roadGradient,m_vehicleWeight,m_Lq,m_Ld,m_Rs,m_Poles,m_fluxLinkage,m_timestep,m_syncdelay,m_samplingPoint);
 
     m_time = 0;
     m_old_time = 0;
@@ -165,6 +169,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_oldVa = 0;
     m_oldVb = 0;
     m_oldVc = 0;
+
+    m_lastTorqueDemand = 0;
 
     motorGraph->setWindowTitle("Motor Currents");
     motorGraph->setAxisText("", "Amps (A)", "");
@@ -301,6 +307,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue(ui->AddNoise->objectName(), ui->AddNoise->isChecked());
     settings.setValue(ui->NoiseAmp->objectName(), ui->NoiseAmp->text());
     settings.setValue(ui->runTime->objectName(), ui->runTime->text());
+    settings.setValue(ui->ThrotRamps->objectName(), ui->ThrotRamps->isChecked());
+    settings.setValue(ui->RoadGradient->objectName(), ui->RoadGradient->text());
 
     settings.setValue(ui->cb_ContCurr->objectName(), ui->cb_ContCurr->isChecked());
     settings.setValue(ui->cb_ContVolt->objectName(), ui->cb_ContVolt->isChecked());
@@ -345,7 +353,23 @@ void MainWindow::runFor(int num_steps)
         {
             m_old_time = (uint32_t)(m_time*100);
             Encoder::UpdateRotorFrequency(100);
-            PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
+
+            int requestedTorque = ui->torqueDemand->text().toInt() * 100;
+            if(ui->ThrotRamps->isChecked())
+            {
+                //ramps set at 5% above 0 and 0.5% below
+                if(m_lastTorqueDemand != requestedTorque)
+                {
+                    if(requestedTorque > m_lastTorqueDemand)
+                        requestedTorque = RAMPUP(m_lastTorqueDemand, requestedTorque, ((m_lastTorqueDemand>=0)?500:50));
+                    else
+                        requestedTorque = RAMPDOWN(m_lastTorqueDemand, requestedTorque, ((m_lastTorqueDemand>=0)?500:50));
+                    m_lastTorqueDemand = requestedTorque;
+                }
+                PwmGeneration::SetTorquePercent(((float)(requestedTorque+50))/100);
+            }
+            else
+                PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
         }
 
         //routines that need calling every ms
@@ -568,12 +592,7 @@ void MainWindow::on_LoopFreq_editingFinished()
 
 void MainWindow::on_pbRunFor_clicked()
 {
-    double runTime = ui->runTime->text().toDouble();
-
-    if((runTime<m_timestep) || (runTime>60))
-        return;
-
-    runFor(int(runTime/m_timestep));
+    runFor(int(m_runTime/m_timestep));
 }
 
 void MainWindow::on_pbRunFor10s_clicked()
@@ -711,9 +730,9 @@ void MainWindow::on_pbTransient_clicked()
     for(int i=0;i<2;i++)
     {
         ui->torqueDemand->setText("0");
-        runFor(int(1.0/m_timestep));
+        runFor(int(m_runTime/m_timestep));
         ui->torqueDemand->setText(torque);
-        runFor(int(1.0/m_timestep));
+        runFor(int(m_runTime/m_timestep));
     }
 }
 
@@ -723,11 +742,11 @@ void MainWindow::on_SyncOfs_editingFinished()
 }
 
 void MainWindow::on_pbAccelCoast_clicked()
-{
+{   
     QString torque = ui->torqueDemand->text();
-    runFor(int(2.0/m_timestep));
+    runFor(int(m_runTime/m_timestep));
     ui->torqueDemand->setText("0");
-    runFor(int(2.0/m_timestep));
+    runFor(int(m_runTime/m_timestep));
     ui->torqueDemand->setText(torque);
 }
 
@@ -840,4 +859,20 @@ void MainWindow::on_rb_Speed_toggled(bool checked)
         powerGraph->setAxisText("Shaft Speed (rpm)", "Power (kW)", "Torque (Nm)");
     else
         powerGraph->setAxisText("Time (s)", "Power (kW)", "Torque (Nm)");
+}
+
+void MainWindow::on_RoadGradient_editingFinished()
+{
+    m_roadGradient = ui->RoadGradient->text().toDouble()/100.0; //entered in %
+    motor->setRoadGradient(m_roadGradient);
+}
+
+void MainWindow::on_runTime_editingFinished()
+{
+    m_runTime = ui->runTime->text().toDouble();
+
+    if(m_runTime<m_timestep)
+        m_runTime = 1;
+    if(m_runTime>60)
+        m_runTime = 60;
 }

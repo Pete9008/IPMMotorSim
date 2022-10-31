@@ -19,8 +19,8 @@
 
 #include "motormodel.h"
 
-MotorModel::MotorModel(double wheelSize,double ratio,double drag,double mass,double Lq,double Ld,double Rs,double poles,double fluxLink,double timestep, double syncDelay, double sampPoint)
-    :m_WheelSize{wheelSize},m_Ratio{ratio},m_Drag{drag},m_Mass{mass},m_Lq{Lq},m_Ld{Ld},m_Rs{Rs},m_Poles{poles},m_FluxLink{fluxLink},m_Timestep{timestep}, m_syncdelay{syncDelay}, m_samplingPoint{sampPoint}
+MotorModel::MotorModel(double wheelSize,double ratio,double roadGradient,double mass,double Lq,double Ld,double Rs,double poles,double fluxLink,double timestep, double syncDelay, double sampPoint)
+    :m_WheelSize{wheelSize},m_Ratio{ratio},m_RoadGradient{roadGradient},m_Mass{mass},m_Lq{Lq},m_Ld{Ld},m_Rs{Rs},m_Poles{poles},m_FluxLink{fluxLink},m_Timestep{timestep}, m_syncdelay{syncDelay}, m_samplingPoint{sampPoint}
 {
     Restart();
 }
@@ -89,7 +89,9 @@ void MotorModel::Step(double Va, double Vb, double Vc)
     //position delta from this component would be limited by a configurable driveshaft angular play parameter.
     //If added this would allow driveline shunt to be simulated by the model
     double wheelTorque = (m_Torque * m_Ratio) / m_WheelSize;//m_Wheelsize is radius (in m) to give N here
-    double accel = wheelTorque/m_Mass;
+    double gradientForce = -(qSin(qAtan(m_RoadGradient))*m_Mass*9.81);
+    double accelForce = wheelTorque + gradientForce;
+    double accel = accelForce/m_Mass;
     m_Speed = m_Speed + (accel * m_Timestep);
     m_Frequency = (m_Speed / (2.0 * M_PI * m_WheelSize)) * m_Ratio;
     m_Power = 2.0 * M_PI * m_Frequency * m_Torque;

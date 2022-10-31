@@ -174,12 +174,12 @@ void DataGraph::updateGraph(void)
 
 void DataGraph::updateXaxis(double min, double max)
 {
-    m_axisX->setRange(minX, maxX);
+    m_axisX->setRange(min, max);
 }
 
 void DataGraph::updateLeftYaxis(double min, double max)
 {
-    m_axisL->setRange(minY_L, maxY_L);
+    m_axisL->setRange(min, max);
 }
 
 void DataGraph::clearData(void)
