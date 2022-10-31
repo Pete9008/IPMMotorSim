@@ -25,12 +25,11 @@
 class MotorModel
 {
 public:
-    MotorModel(double wheelSize,double ratio,double drag,double mass,double Lq,double Ld,double Rs,double poles,double fluxLink,double timestep, double syncDelay, double sampPoint);
+    MotorModel(double wheelSize,double ratio,double roadGradient,double mass,double Lq,double Ld,double Rs,double poles,double fluxLink,double timestep, double syncDelay, double sampPoint);
     void Step(double Va, double Vb, double Vc);
     void Restart(void);
     void setWheelSize(double val) {m_WheelSize = val;}
     void setGboxRatio(double val) {m_Ratio = val;}
-    void setDrag(double val) {m_Drag = val;}
     void setVehicleMass(double val) {m_Mass = val;}
     void setLq(double val) {m_Lq = val;}
     void setLd(double val) {m_Ld = val;}
@@ -41,6 +40,7 @@ public:
     void setTimestep(double val) {m_Timestep = val;}
     void setPosition(double val) {m_Position = (val * m_Poles);}
     void setSamplingPoint(double val) {m_samplingPoint = val;}
+    void setRoadGradient(double val) {m_RoadGradient = val;}
     double getMotorPosition(void);
     double getElecPosition(void);
     double getMotorFreq(void) {return m_Frequency;}
@@ -69,7 +69,7 @@ public:
 private:
     double m_WheelSize;
     double m_Ratio;
-    double m_Drag;
+    double m_RoadGradient;
     double m_Mass;
     double m_Lq;
     double m_Ld;

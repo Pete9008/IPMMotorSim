@@ -57,7 +57,6 @@ private:
     double m_wheelSize;
     double m_vehicleWeight;
     double m_gearRatio;
-    double m_drag;
     double m_Lq;
     double m_Ld;
     double m_Rs;
@@ -65,10 +64,13 @@ private:
     double m_fluxLinkage;
     double m_syncdelay;
     double m_samplingPoint;
+    double m_roadGradient;
 
     double m_timestep;
     double m_Vdc;
 
+    double m_runTime;
+    int m_lastTorqueDemand;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -170,6 +172,10 @@ private slots:
     void on_cb_PowTorqTime_toggled(bool checked);
 
     void on_rb_Speed_toggled(bool checked);
+
+    void on_RoadGradient_editingFinished();
+
+    void on_runTime_editingFinished();
 
 private:
     Ui::MainWindow *ui;
