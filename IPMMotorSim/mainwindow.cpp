@@ -662,7 +662,7 @@ void MainWindow::on_opMode_editingFinished()
 
 void MainWindow::on_direction_editingFinished()
 {
-    Param::SetInt(Param::dir, ui->direction->text().toInt());
+    Param::Set(Param::dir, FP_FROMINT(ui->direction->text().toInt()));
 }
 
 void MainWindow::on_IqManual_editingFinished()
@@ -687,7 +687,7 @@ void MainWindow::on_CurrentKi_editingFinished()
 
 void MainWindow::on_SyncAdv_editingFinished()
 {
-    Param::SetInt(Param::syncadv, ui->SyncAdv->text().toInt());
+    Param::Set(Param::syncadv, FP_FROMINT(ui->SyncAdv->text().toInt()));
 }
 
 void MainWindow::on_LqMinusLd_editingFinished()
@@ -738,7 +738,7 @@ void MainWindow::on_pbTransient_clicked()
 
 void MainWindow::on_SyncOfs_editingFinished()
 {
-    Param::SetInt(Param::syncofs, ui->SyncOfs->text().toInt());
+    Param::Set(Param::syncofs, FP_FROMINT(ui->SyncOfs->text().toInt()));
 }
 
 void MainWindow::on_pbAccelCoast_clicked()
@@ -752,7 +752,7 @@ void MainWindow::on_pbAccelCoast_clicked()
 
 void MainWindow::on_FWMargin_editingFinished()
 {
-    Param::SetInt(Param::fwmargin, ui->FWMargin->text().toInt());
+    Param::Set(Param::fwmargin, FP_FROMINT(ui->FWMargin->text().toInt()));
 }
 
 void MainWindow::on_VLimKp_editingFinished()
