@@ -85,14 +85,14 @@ void TerminalCommands::PrintParamsJson(Terminal* term, char *arg)
       if ((Param::GetFlag((Param::PARAM_NUM)idx) & Param::FLAG_HIDDEN) == 0 || printHidden)
       {
          //fprintf(term, "%c\r\n   \"%s\": {\"unit\":\"%s\",\"value\":%f,",comma, pAtr->name, pAtr->unit, Param::Get((Param::PARAM_NUM)idx));
-         str.sprintf("%c\r\n   \"%s\": {\"unit\":\"%s\",\"value\":%.2f,",comma, pAtr->name, pAtr->unit, Param::GetFloat((Param::PARAM_NUM)idx));
+         str.asprintf("%c\r\n   \"%s\": {\"unit\":\"%s\",\"value\":%.2f,",comma, pAtr->name, pAtr->unit, Param::GetFloat((Param::PARAM_NUM)idx));
          out << str;
 
          if (Param::IsParam((Param::PARAM_NUM)idx))
          {
             //fprintf(term, "\"isparam\":true,\"minimum\":%f,\"maximum\":%f,\"default\":%f,\"category\":\"%s\",\"i\":%d}",
             //       pAtr->min, pAtr->max, pAtr->def, pAtr->category, idx);
-            str.sprintf("\"isparam\":true,\"minimum\":%.2f,\"maximum\":%.2f,\"default\":%.2f,\"category\":\"%s\",\"i\":%d}", FP_TOFLOAT(pAtr->min), FP_TOFLOAT(pAtr->max), FP_TOFLOAT(pAtr->def), pAtr->category, idx);
+            str.asprintf("\"isparam\":true,\"minimum\":%.2f,\"maximum\":%.2f,\"default\":%.2f,\"category\":\"%s\",\"i\":%d}", FP_TOFLOAT(pAtr->min), FP_TOFLOAT(pAtr->max), FP_TOFLOAT(pAtr->def), pAtr->category, idx);
             out << str;
          }
          else
