@@ -132,17 +132,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->Poles->setText(QString::number(Param::GetFloat(Param::polepairs), 'f', 1));
     ui->CurrentKp->setText(QString::number(Param::GetInt(Param::curkp)));
     ui->CurrentKi->setText(QString::number(Param::GetInt(Param::curki)));
-    ui->FWKp->setText(QString::number(Param::GetInt(Param::fwkp)));
-    ui->FWKi->setText(QString::number(Param::GetInt(Param::fwki)));
-    ui->CurKiFrqGain->setText(QString::number(Param::GetInt(Param::curkifrqgain)));
-    ui->FWMargin->setText(QString::number(Param::GetInt(Param::fwmargin)));
-    ui->VLimKp->setText(QString::number(Param::GetInt(Param::vlimkp)));
-    ui->VLimKi->setText(QString::number(Param::GetInt(Param::vlimki)));
+    ui->VLimMargin->setText(QString::number(Param::GetInt(Param::vlimmargin)));
+    ui->VLimFlt->setText(QString::number(Param::GetInt(Param::vlimflt)));
+    ui->FWCurrMax->setText(QString::number(Param::GetInt(Param::fwcurmax)));
     ui->IdManual->setText(QString::number(Param::GetFloat(Param::manualid), 'f', 1));
     ui->IqManual->setText(QString::number(Param::GetFloat(Param::manualiq), 'f', 1));
     ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
     ui->throttleCurrent->setText(QString::number(Param::GetFloat(Param::throtcur), 'f', 1));
-    ui->ICrit->setText(QString::number(Param::GetFloat(Param::icrit), 'f', 1));
 
     m_wheelSize = ui->wheelSize->text().toDouble();
     m_vehicleWeight = ui->vehicleWeight->text().toDouble();
@@ -340,7 +336,7 @@ void MainWindow::runFor(int num_steps)
 
     QList<QPointF> listIa, listIb, listIc, listIq, listId;
     QList<QPointF> listMFreq, listMPos, listContMPos;
-    QList<QPointF> listCVa, listCVb, listCVc, listCVq, listCVd, listCIq, listCId, listCifw, listCivlim;
+    QList<QPointF> listCVa, listCVb, listCVc, listCVq, listCVd, listCIq, listCId, listCifw;//, listCivlim;
     QList<QPointF> listVVd, listVVq, listVVq_bemf, listVVq_dueto_id, listVVd_dueto_iq, listVVq_dueto_Rq, listVVd_dueto_Rd, listVVLd, listVVLq;
     QList<QPointF> listIdIq;
     QList<QPointF> listPower, listTorque;
@@ -403,8 +399,8 @@ void MainWindow::runFor(int num_steps)
         if(disablePWM) //needed to allow OpeinInverter initialisation to complete
         {
             Va = 0;
-            Va = 0;
-            Va = 0;
+            Vb = 0;
+            Vc = 0;
         }
         else
         {
@@ -456,7 +452,7 @@ void MainWindow::runFor(int num_steps)
         listCId.append(QPointF(m_time, Param::GetFloat(Param::id)));
 
         listCifw.append(QPointF(m_time, Param::GetFloat(Param::ifw)));
-        listCivlim.append(QPointF(m_time, Param::GetFloat(Param::vlim)));
+        //listCivlim.append(QPointF(m_time, Param::GetFloat(Param::vlim)));
 
         listVVd.append(QPointF(m_time, motor->getVd()));
         listVVq.append(QPointF(m_time, motor->getVq()));
@@ -503,7 +499,7 @@ void MainWindow::runFor(int num_steps)
     debugGraph->addDataPoints(listCIq, C_IQ);
     debugGraph->addDataPoints(listCId, C_ID);
     debugGraph->addDataPoints(listCifw, C_IFW);
-    debugGraph->addDataPoints(listCivlim, C_IVLIM);
+    //debugGraph->addDataPoints(listCivlim, C_IVLIM);
 
     voltageGraph->addDataPoints(listVVd, VVD);
     voltageGraph->addDataPoints(listVVq, VVQ);
@@ -707,17 +703,6 @@ void MainWindow::on_FreqMax_editingFinished()
     Param::Set(Param::fmax, FP_FROMFLT(ui->FreqMax->text().toFloat()));
 }
 
-void MainWindow::on_FWKp_editingFinished()
-{
-    Param::Set(Param::fwkp, FP_FROMINT(ui->FWKp->text().toInt()));
-}
-
-void MainWindow::on_FWKi_editingFinished()
-{
-    Param::Set(Param::fwki, FP_FROMINT(ui->FWKi->text().toInt()));
-}
-
-
 void MainWindow::on_SamplingPoint_editingFinished()
 {
     m_samplingPoint = ui->SamplingPoint->text().toDouble()/100.0; //entered in %
@@ -748,31 +733,6 @@ void MainWindow::on_pbAccelCoast_clicked()
     ui->torqueDemand->setText("0");
     runFor(int(m_runTime/m_timestep));
     ui->torqueDemand->setText(torque);
-}
-
-void MainWindow::on_FWMargin_editingFinished()
-{
-    Param::Set(Param::fwmargin, FP_FROMINT(ui->FWMargin->text().toInt()));
-}
-
-void MainWindow::on_VLimKp_editingFinished()
-{
-    Param::Set(Param::vlimkp, FP_FROMINT(ui->VLimKp->text().toInt()));
-}
-
-void MainWindow::on_VLimKi_editingFinished()
-{
-    Param::Set(Param::vlimki, FP_FROMINT(ui->VLimKi->text().toInt()));
-}
-
-void MainWindow::on_CurKiFrqGain_editingFinished()
-{
-    Param::Set(Param::curkifrqgain, FP_FROMINT(ui->CurKiFrqGain->text().toInt()));
-}
-
-void MainWindow::on_ICrit_editingFinished()
-{
-    Param::Set(Param::icrit, FP_FROMFLT(ui->ICrit->text().toFloat()));
 }
 
 void MainWindow::on_cb_OpPoint_toggled(bool checked)
@@ -875,4 +835,19 @@ void MainWindow::on_runTime_editingFinished()
         m_runTime = 1;
     if(m_runTime>60)
         m_runTime = 60;
+}
+
+void MainWindow::on_VLimMargin_editingFinished()
+{
+    Param::Set(Param::vlimmargin, FP_FROMINT(ui->VLimMargin->text().toInt()));
+}
+
+void MainWindow::on_VLimFlt_editingFinished()
+{
+    Param::Set(Param::vlimflt, FP_FROMINT(ui->VLimFlt->text().toInt()));
+}
+
+void MainWindow::on_FWCurrMax_editingFinished()
+{
+    Param::Set(Param::fwcurmax, FP_FROMINT(ui->FWCurrMax->text().toInt()));
 }

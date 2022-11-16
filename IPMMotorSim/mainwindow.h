@@ -135,10 +135,6 @@ private slots:
 
     void on_FreqMax_editingFinished();
 
-    void on_FWKp_editingFinished();
-
-    void on_FWKi_editingFinished();
-
     void on_SamplingPoint_editingFinished();
 
     void on_pbTransient_clicked();
@@ -146,16 +142,6 @@ private slots:
     void on_SyncOfs_editingFinished();
 
     void on_pbAccelCoast_clicked();
-
-    void on_FWMargin_editingFinished();
-
-    void on_VLimKp_editingFinished();
-
-    void on_VLimKi_editingFinished();
-
-    void on_CurKiFrqGain_editingFinished();
-
-    void on_ICrit_editingFinished();
 
     void on_cb_OpPoint_toggled(bool checked);
 
@@ -176,6 +162,12 @@ private slots:
     void on_RoadGradient_editingFinished();
 
     void on_runTime_editingFinished();
+
+    void on_VLimMargin_editingFinished();
+
+    void on_VLimFlt_editingFinished();
+
+    void on_FWCurrMax_editingFinished();
 
 private:
     Ui::MainWindow *ui;

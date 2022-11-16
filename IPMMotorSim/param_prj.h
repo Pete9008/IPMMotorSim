@@ -17,15 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define VER 5.20.R
+#define VER 5.24.R
 
 /* Entries must be ordered as follows:
    1. Saveable parameters (id != 0)
    2. Temporary parameters (id = 0)
    3. Display values
  */
-//Next param id (increase when adding new parameter!): 148
-//Next value Id: 2050
+//Next param id (increase when adding new parameter!): 146
+//Next value Id: 2049
 /*              category     name         unit       min     max     default id */
 
 #define MOTOR_PARAMETERS_COMMON \
@@ -33,7 +33,7 @@
     PARAM_ENTRY(CAT_MOTOR,   respolepairs,"",        1,      16,     4,      93  ) \
     PARAM_ENTRY(CAT_MOTOR,   sincosofs,   "dig",     1,      4096,   2048,   131 ) \
     PARAM_ENTRY(CAT_MOTOR,   encmode,     ENCMODES,  0,      5,      0,      75  ) \
-    PARAM_ENTRY(CAT_MOTOR,   fmax,        "Hz",      21,     1000,   800,    9   ) \
+    PARAM_ENTRY(CAT_MOTOR,   fmax,        "Hz",      21,     1000,   200,    9   ) \
     PARAM_ENTRY(CAT_MOTOR,   numimp,      "ppr",     8,      8192,   60,     15  ) \
     PARAM_ENTRY(CAT_MOTOR,   dirchrpm,    "rpm",     0,      20000,  100,    87  ) \
     PARAM_ENTRY(CAT_MOTOR,   dirmode,     DIRMODES,  0,      4,      1,      95  ) \
@@ -50,20 +50,15 @@
     PARAM_ENTRY(CAT_MOTOR,   fslipconstmax,"Hz",     0,      10,     5,      100 )
 
 #define MOTOR_PARAMETERS_FOC \
-    PARAM_ENTRY(CAT_MOTOR,   curkp,       "",        0,      20000,  600,    107 ) \
-    PARAM_ENTRY(CAT_MOTOR,   curki,       "",        0,      100000, 2000,   108 ) \
-    PARAM_ENTRY(CAT_MOTOR,   fwkp,        "",        0,      10000,  0,      142 ) \
-    PARAM_ENTRY(CAT_MOTOR,   fwki,        "",        0,      10000,  100,    143 ) \
-    PARAM_ENTRY(CAT_MOTOR,   vlimkp,      "",        0,      10000,  0,      145 ) \
-    PARAM_ENTRY(CAT_MOTOR,   vlimki,      "",        0,      10000,  6000,   146 ) \
-    PARAM_ENTRY(CAT_MOTOR,   fwmargin,    "dig",     0,      10000,  2500,   141 ) \
+    PARAM_ENTRY(CAT_MOTOR,   curkp,       "",        0,      20000,  700,    107 ) \
+    PARAM_ENTRY(CAT_MOTOR,   curki,       "",        0,      100000, 4000,   108 ) \
+    PARAM_ENTRY(CAT_MOTOR,   vlimflt,     "",        0,      16,     11,     145 ) \
+    PARAM_ENTRY(CAT_MOTOR,   vlimmargin,  "dig",     0,      10000,  2000,   141 ) \
+    PARAM_ENTRY(CAT_MOTOR,   fwcurmax,    "A",       -1000,  0,     -80,     144 ) \
     PARAM_ENTRY(CAT_MOTOR,   syncofs,     "dig",     0,      65535,  0,      70  ) \
-    PARAM_ENTRY(CAT_MOTOR,   lqminusld,   "mH",      0,      1000,   2,      139 ) \
-    PARAM_ENTRY(CAT_MOTOR,   icrit,       "A",       -1000,  0,      -75,    144 ) \
-    PARAM_ENTRY(CAT_MOTOR,   fluxlinkage, "mWeber",  0,      1000,   150,    140 ) \
-    PARAM_ENTRY(CAT_MOTOR,   syncadv,     "dig/Hz",  0,      65535,  7,      133 ) \
-    PARAM_ENTRY(CAT_MOTOR,   ffwstart,    "Hz",      0,      1000,   200,    136 ) \
-    PARAM_ENTRY(CAT_MOTOR,   curkifrqgain,"",        0,      10000,  100,    147 ) \
+    PARAM_ENTRY(CAT_MOTOR,   lqminusld,   "mH",      0,      1000,   2.0,    139 ) \
+    PARAM_ENTRY(CAT_MOTOR,   fluxlinkage, "mWeber",  0,      1000,   200,    140 ) \
+    PARAM_ENTRY(CAT_MOTOR,   syncadv,     "dig/Hz",  0,      65535,  10,     133 ) \
 
 #define INVERTER_PARAMETERS_COMMON \
     PARAM_ENTRY(CAT_INVERTER,pwmfrq,      PWMFRQS,   0,      2,      1,      13  ) \
@@ -122,7 +117,7 @@
     PARAM_ENTRY(CAT_THROTTLE,slipstart,   "%",       10,     100,    50,     90  ) \
 
 #define THROTTLE_PARAMETERS_FOC \
-   PARAM_ENTRY(CAT_THROTTLE,throtcur,    "A/%",       0,     10,     3,     105  )
+   PARAM_ENTRY(CAT_THROTTLE,throtcur,    "A/%",       0,     10,     1,     105  )
 
 #define REGEN_PARAMETERS \
     PARAM_ENTRY(CAT_REGEN,   brakeregen,  "%",       -100,   0,      -50,    38  ) \
@@ -205,7 +200,6 @@
     VALUE_ENTRY(ifw,     "A",     2048 ) \
     VALUE_ENTRY(ud,      "dig",   2046 ) \
     VALUE_ENTRY(uq,      "dig",   2047 ) \
-    VALUE_ENTRY(vlim,    "dig",   2049 ) \
 
 #if CONTROL == CTRL_SINE
 #define PARAM_LIST \
@@ -240,7 +234,6 @@
     AUTOMATION_CONTACT_PWM_COMM_PARAMETERS \
     PARAM_ENTRY(CAT_TEST,    manualiq,    "A",       -400,   400,    0,      0  ) \
     PARAM_ENTRY(CAT_TEST,    manualid,    "A",       -400,   400,    0,      0  ) \
-    PARAM_ENTRY(CAT_TEST,    manualifw,   "A",       -400,   400,    0,      0  ) \
     VALUE_BLOCK1 \
     VALUES_FOC \
     VALUE_BLOCK2 \
