@@ -7,14 +7,13 @@ The main aim of this project is to allow testing and development of the motor co
 The model is not intended to be perfect and is in the very early days of its development.  Hopefully it's good enough to be useful now and will develop into something more sophisticated over time.
 
 # Compiling
-Qt Creator is required to compile this code.
+Init the inverter source code by typing
 
-A version of the source code for the stm32-sine firmware must be placed in the stm32-sine subdirectory of this project.  This will then be the used by the simulator to control the motor.  The OpenInverter code is in a fairly constant state of flux so it is pot luck whether a particular build will work.  Rel5.24 with the following mod at line 93 of pwmgeneration-foc.cpp is currently the best bet.
+`git submodule update --init --recursive`
 
-      /*if (frqFiltered < FP_FROMINT(30))
-         qController.SetMinMaxY(dir <= 0 ? -qlimit : 0, dir > 0 ? qlimit : 0);
-      else*/
-         qController.SetMinMaxY(-qlimit, qlimit);
+The change into the build directory and type
+
+`make`
 
 # Current Limitations
 The simulator uses a number of new parameters not yet found in most builds of stm32-sin.  There is a replacement param_prj.h file in the project directory that will be used in place of the one in the subdirectory.  It is up to the user to ensure that the parameters contained in this replacement file are appropriate for whichever versions of the stn32-sine software is being used.
