@@ -7,8 +7,8 @@
 
 Terminal* Terminal::defaultTerminal;
 
-Terminal t;
-static Terminal* terminal = &t;
+//Terminal t;
+//static Terminal* terminal = &t;
 
 Terminal::Terminal()
 {
@@ -54,18 +54,20 @@ void Terminal::SendBinary(uint8_t* data, uint32_t len)
     if(!logFile.isOpen())
     {
         logFile.open(QFile::WriteOnly);
-        TerminalCommands::PrintParamsJson(this,NULL);
+        TerminalCommands::PrintParamsJson(this,nullptr);
         logFile.write(binHeader, sizeof(binHeader));
     }
 
     if(logFile.isOpen())
     {
-        logFile.write((char *)data, len);
+        logFile.write(reinterpret_cast<char *>(data), len);
     }
 }
 
 void TerminalCommands::PrintParamsJson(Terminal* term, char *arg)
 {
+   (void)term;
+   (void)arg;
    //arg = my_trim(arg);
     QTextStream out(&logFile);
     QString str;
@@ -77,9 +79,9 @@ void TerminalCommands::PrintParamsJson(Terminal* term, char *arg)
    out << "{";
    for (uint32_t idx = 0; idx < Param::PARAM_LAST; idx++)
    {
-      int canId, canOffset, canLength;
-      bool isRx;
-      s32fp canGain;
+      //int canId, canOffset, canLength;
+      //bool isRx;
+      //s32fp canGain;
       pAtr = Param::GetAttrib((Param::PARAM_NUM)idx);
 
       if ((Param::GetFlag((Param::PARAM_NUM)idx) & Param::FLAG_HIDDEN) == 0 || printHidden)

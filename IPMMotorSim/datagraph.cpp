@@ -95,6 +95,15 @@ void DataGraph::addSeries(QString legend, axisSel axis, int key)
     m_axis[key] = axis;
 }
 
+void DataGraph::updateSeries(QString legend, axisSel axis, int key)
+{
+    if(!m_series.contains(key))
+        return;
+
+    m_legends[key] = legend;
+    m_axis[key] = axis;
+}
+
 
 
 void DataGraph::addDataPoint(double x, double y, int key)

@@ -36,6 +36,7 @@ public:
     ~DataGraph();
     void saveWinState();
     void addSeries(QString legend, axisSel axis, int key);
+    void updateSeries(QString legend, axisSel axis, int key);
     void addDataPoint(double x, double y, int key);
     void addDataPoints(QList<QPointF> pointList, int key);
     void clearData();

@@ -125,6 +125,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ANA_IN_CONFIGURE(ANA_IN_LIST);
 
+    //set any parameters that can upset simulation to safe values
+    Param::SetInt(Param::syncofs,0); //simulator assumes perfect alignment
+    Param::SetInt(Param::pinswap,0); //shouldn't be a problem but may be in the future
+    Param::SetInt(Param::respolepairs,Param::GetInt(Param::polepairs)); //force resolver pole pairs to match motor
+
     ui->LqMinusLd->setText(QString::number(Param::GetFloat(Param::lqminusld), 'f', 1));
     ui->FluxLinkage->setText(QString::number(Param::GetInt(Param::fluxlinkage)));
     ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
@@ -155,6 +160,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_timestep = 1.0 / ui->LoopFreq->text().toDouble();
     m_Vdc = ui->Vdc->text().toDouble();
+    Param::SetFloat(Param::udc, m_Vdc);
 
     motor = new MotorModel(m_wheelSize,m_gearRatio,m_roadGradient,m_vehicleWeight,m_Lq,m_Ld,m_Rs,m_Poles,m_fluxLinkage,m_timestep,m_syncdelay,m_samplingPoint);
 
@@ -178,6 +184,7 @@ MainWindow::MainWindow(QWidget *parent) :
     motorGraph->addSeries("Id (A)", left, ID);
     motorGraph->setColour(Qt::red, ID);
     if(settings.contains(ui->cb_MotCurr->objectName())) ui->cb_MotCurr->setChecked(settings.value(ui->cb_MotCurr->objectName()).toBool());
+    if(settings.contains(ui->cb_PhaseCurrs->objectName())) ui->cb_PhaseCurrs->setChecked(settings.value(ui->cb_PhaseCurrs->objectName()).toBool());
 
     simulationGraph->setWindowTitle("Simulation Data");
     simulationGraph->setAxisText("", "Angle (Degrees)", "Speed (Hz)");
@@ -188,6 +195,7 @@ MainWindow::MainWindow(QWidget *parent) :
     simulationGraph->addSeries("Motor Elec Speed (Hz)", right, M_RPM);
     simulationGraph->setColour(Qt::blue, M_RPM);
     if(settings.contains(ui->cb_Simulation->objectName())) ui->cb_Simulation->setChecked(settings.value(ui->cb_Simulation->objectName()).toBool());
+    if(settings.contains(ui->cb_MotorPos->objectName())) ui->cb_MotorPos->setChecked(settings.value(ui->cb_MotorPos->objectName()).toBool());
 
     controllerGraph->setWindowTitle("Controller Voltages");
     controllerGraph->setAxisText("", "Volts (V)", "");
@@ -199,6 +207,7 @@ MainWindow::MainWindow(QWidget *parent) :
     controllerGraph->addSeries("Vd (V)", left, VD);
     controllerGraph->setColour(Qt::red, VD);
     if(settings.contains(ui->cb_ContVolt->objectName())) ui->cb_ContVolt->setChecked(settings.value(ui->cb_ContVolt->objectName()).toBool());
+    if(settings.contains(ui->cb_PhaseVolts->objectName())) ui->cb_PhaseVolts->setChecked(settings.value(ui->cb_PhaseVolts->objectName()).toBool());
 
     debugGraph->setWindowTitle("Controller Currents");
     debugGraph->setAxisText("", "Amps (A)", "");
@@ -228,14 +237,27 @@ MainWindow::MainWindow(QWidget *parent) :
     idigGraph->setWindowTitle("Operating Point");
     idigGraph->setAxisText("Id (A)", "Iq (A)", "");
     idigGraph->addSeries("I (A)", left, IDIQAMPS);
-    if(settings.contains(ui->cb_OpPoint->objectName())) ui->cb_OpPoint->setChecked(settings.value(ui->cb_OpPoint->objectName()).toBool());
+    if(settings.contains(ui->cb_OpPoint->objectName())) ui->cb_OpPoint->setChecked(settings.value(ui->cb_OpPoint->objectName()).toBool());    
+    if(settings.contains(ui->rb_OP_Amps->objectName()))
+    {
+        if(settings.value(ui->rb_OP_Amps->objectName()).toBool())
+        {
+            ui->rb_OP_Amps->setChecked(true);
+            idigGraph->setAxisText("Id (A)", "Iq (A)", "");
+        }
+        else
+        {
+            ui->rb_OP_Volts->setChecked(true);
+            idigGraph->setAxisText("Vd (V)", "Vq (V)", "");
+            idigGraph->updateSeries("V (V)", left, IDIQAMPS);
+        }
+    }
 
     powerGraph->setWindowTitle("Power/Torque");
     powerGraph->setAxisText("Time (s)", "Power (kW)", "Torque (Nm)");
     powerGraph->addSeries("Power (kW)", left, POWER);
     powerGraph->addSeries("Torque (Nm)", right, TORQUE);
     if(settings.contains(ui->cb_PowTorqTime->objectName())) ui->cb_PowTorqTime->setChecked(settings.value(ui->cb_PowTorqTime->objectName()).toBool());
-
     if(settings.contains(ui->rb_Speed->objectName()))
     {
         if(settings.value(ui->rb_Speed->objectName()).toBool())
@@ -314,6 +336,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue(ui->cb_PowTorqTime->objectName(), ui->cb_PowTorqTime->isChecked());
     settings.setValue(ui->cb_Simulation->objectName(), ui->cb_Simulation->isChecked());
     settings.setValue(ui->rb_Speed->objectName(), ui->rb_Speed->isChecked());
+
+    settings.setValue(ui->cb_PhaseCurrs->objectName(), ui->cb_PhaseCurrs->isChecked());
+    settings.setValue(ui->cb_MotorPos->objectName(), ui->cb_MotorPos->isChecked());
+    settings.setValue(ui->cb_PhaseVolts->objectName(), ui->cb_PhaseVolts->isChecked());
+    settings.setValue(ui->rb_OP_Amps->objectName(), ui->rb_OP_Amps->isChecked());
 
     motorGraph->saveWinState();
     simulationGraph->saveWinState();
@@ -410,9 +437,12 @@ void MainWindow::runFor(int num_steps)
         }
 
         //add voltages to plot here so that we see the SVM waveforms
-        listCVa.append(QPointF(m_time, Va));
-        listCVb.append(QPointF(m_time, Vb));
-        listCVc.append(QPointF(m_time, Vc));
+        if(ui->cb_PhaseVolts->isChecked())
+        {
+            listCVa.append(QPointF(m_time, Va));
+            listCVb.append(QPointF(m_time, Vb));
+            listCVc.append(QPointF(m_time, Vc));
+        }
 
         //remove space vector modulation
         double offset = Va + Vb + Vc;
@@ -429,22 +459,30 @@ void MainWindow::runFor(int num_steps)
         m_oldVb = Vb;
         m_oldVb = Vb;
 
-
         //motor->Step(0,0,0);
-        listIa.append(QPointF(m_time, motor->getIaSamp()));
-        listIb.append(QPointF(m_time, motor->getIbSamp()));
-        listIc.append(QPointF(m_time, motor->getIcSamp()));
+        if(ui->cb_PhaseCurrs->isChecked())
+        {
+            listIa.append(QPointF(m_time, motor->getIaSamp()));
+            listIb.append(QPointF(m_time, motor->getIbSamp()));
+            listIc.append(QPointF(m_time, motor->getIcSamp()));
+        }
         listIq.append(QPointF(m_time, motor->getIq()));
         listId.append(QPointF(m_time, motor->getId()));
 
         listMFreq.append(QPointF(m_time, (motor->getMotorFreq()*m_Poles)));
-        listMPos.append(QPointF(m_time, motor->getMotorPosition()));
-        listContMPos.append(QPointF(m_time, (360.0 * PwmGeneration::GetAngle())/TWO_PI_CONT));
+        if(ui->cb_MotorPos->isChecked())
+        {
+            listMPos.append(QPointF(m_time, motor->getMotorPosition()));
+            listContMPos.append(QPointF(m_time, (360.0 * PwmGeneration::GetAngle())/TWO_PI_CONT));
+        }
 
           //inlcude here to see sinusoidal waveforms that motor sees
-//        listCVa.append(QPointF(m_time, Va));
-//        listCVb.append(QPointF(m_time, Vb));
-//        listCVc.append(QPointF(m_time, Vc));
+//        if(ui->cb_PhaseVolts->isChecked())
+//        {
+//            listCVa.append(QPointF(m_time, Va));
+//            listCVb.append(QPointF(m_time, Vb));
+//            listCVc.append(QPointF(m_time, Vc));
+//        }
         listCVq.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::uq)));
         listCVd.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::ud)));
 
@@ -464,7 +502,10 @@ void MainWindow::runFor(int num_steps)
         listVVLd.append(QPointF(m_time, motor->getVLd()));
         listVVLq.append(QPointF(m_time, motor->getVLq()));
 
-        listIdIq.append(QPointF(motor->getId(), motor->getIq()));
+        if(ui->rb_OP_Amps->isChecked())
+            listIdIq.append(QPointF(motor->getId(), motor->getIq()));
+        else
+            listIdIq.append(QPointF(motor->getVd(), motor->getVq()));
 
         if(ui->rb_Speed->isChecked())
         {
@@ -521,7 +562,7 @@ void MainWindow::runFor(int num_steps)
     if(ui->cb_ContVolt->isChecked()) controllerGraph->updateGraph();
     if(ui->cb_ContCurr->isChecked()) debugGraph->updateGraph();
     if(ui->cb_MotVolt->isChecked()) voltageGraph->updateGraph();
-    if(ui->cb_OpPoint->isChecked()) idigGraph->updateGraph();
+    if(ui->cb_OpPoint->isChecked()) idigGraph->updateGraph(ui->rb_OP_Amps->isChecked());
     if(ui->cb_PowTorqTime->isChecked()) powerGraph->updateGraph();
 }
 
@@ -546,6 +587,7 @@ void MainWindow::on_gearRatio_editingFinished()
 void MainWindow::on_Vdc_editingFinished()
 {
     m_Vdc = ui->Vdc->text().toDouble();
+    Param::SetFloat(Param::udc, m_Vdc);
 }
 
 void MainWindow::on_Lq_editingFinished()
@@ -570,6 +612,7 @@ void MainWindow::on_Poles_editingFinished()
 {
     m_Poles = ui->Poles->text().toDouble();
     Param::Set(Param::polepairs, FP_FROMINT(ui->Poles->text().toInt()));
+    Param::Set(Param::respolepairs,FP_FROMINT(ui->Poles->text().toInt())); //force resolver pole pairs to match motor
     motor->setPoles(m_Poles);
 }
 
@@ -739,7 +782,7 @@ void MainWindow::on_cb_OpPoint_toggled(bool checked)
 {
     if(checked)
     {
-        idigGraph->updateGraph();
+        idigGraph->updateGraph(ui->rb_OP_Amps->isChecked());
         idigGraph->show();
     }
     else
@@ -851,3 +894,19 @@ void MainWindow::on_FWCurrMax_editingFinished()
 {
     Param::Set(Param::fwcurmax, FP_FROMINT(ui->FWCurrMax->text().toInt()));
 }
+
+void MainWindow::on_rb_OP_Amps_toggled(bool checked)
+{
+    idigGraph->clearData(); //need to restart as data arrays not right for new mode
+    if(checked)
+    {
+        idigGraph->setAxisText("Id (A)", "Iq (A)", "");
+        idigGraph->updateSeries("I (A)", left, IDIQAMPS);
+    }
+    else
+    {
+        idigGraph->setAxisText("Vd (V)", "Vq (V)", "");
+        idigGraph->updateSeries("V (V)", left, IDIQAMPS);
+    }
+}
+

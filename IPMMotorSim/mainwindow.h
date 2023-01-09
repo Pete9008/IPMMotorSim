@@ -169,6 +169,8 @@ private slots:
 
     void on_FWCurrMax_editingFinished();
 
+    void on_rb_OP_Amps_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
     void closeEvent(QCloseEvent *bar);

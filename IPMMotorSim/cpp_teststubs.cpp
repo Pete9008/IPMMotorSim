@@ -74,7 +74,7 @@ bool Encoder::SeenNorthSignal()
 
 void Encoder::UpdateRotorAngle(int dir)
 {
-
+    (void)dir;
 
     angle = g_input_angle;
     UpdateTurns(angle, lastAngle);
@@ -146,7 +146,7 @@ int Encoder::GetRotorDirection()
 
 void timer_disable_break_main_output(int i)
 {
-
+    (void)i;
 }
 
 /** This function is called when the user changes a parameter */
@@ -176,9 +176,9 @@ void Param::Change(Param::PARAM_NUM paramNum)
    }
 }
 
-void Encoder::SetPwmFrequency(uint32_t frq) {}
+void Encoder::SetPwmFrequency(uint32_t frq) {(void)frq;}
 
-int printf(const char *format, ...) {}
+int printf(const char *format, ...) {(void)format;return 0;}
 
 #undef ANA_IN_ENTRY
 #define ANA_IN_ENTRY(name, port, pin) AnaIn AnaIn::name(__COUNTER__);
@@ -207,6 +207,8 @@ uint16_t AnaIn::Get()
 
 void AnaIn::Configure(uint32_t port, uint8_t pin)
 {
+    (void)port;
+    (void)pin;
 }
 
 #undef DIG_IO_ENTRY

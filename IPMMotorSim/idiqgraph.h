@@ -27,7 +27,7 @@ class IdIqGraph : public DataGraph
 {
 public:
     explicit IdIqGraph(QString name, QWidget *parent = nullptr);
-    void updateGraph(void);
+    void updateGraph(bool isAmps);
 };
 
 #endif // IDIQGRAPH_H

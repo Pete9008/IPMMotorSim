@@ -26,24 +26,34 @@ IdIqGraph::IdIqGraph(QString name, QWidget *parent) : DataGraph (name, parent)
     addSeries("Is (A)",left, 10);
 }
 
-void IdIqGraph::updateGraph(void)
+void IdIqGraph::updateGraph(bool isAmps)
 {
-    double id, iq;
+    double d, q, s;
     QList<QPointF> list;
 
     //add is circle
-    double is = Param::GetFloat(Param::throtcur) *100;
+    if(isAmps)
+    {
+        updateSeries("Is (A)",left, 10);
+        s = Param::GetFloat(Param::throtcur) * 100;
+    }
+    else
+    {
+        updateSeries("Vs (V)",left, 10);
+        s = 1.1547 * Param::GetFloat(Param::udc) * 0.5;
+    }
+
     for(double ang = 0;ang < 360;ang++)
     {
-        id = is * qCos(qDegreesToRadians(ang));
-        iq = is * qSin(qDegreesToRadians(ang));
-        list.append(QPointF(id, iq));
+        d = s * qCos(qDegreesToRadians(ang));
+        q = s * qSin(qDegreesToRadians(ang));
+        list.append(QPointF(d, q));
     }
     addDataPoints(list, 10);
 
     DataGraph::updateGraph();
 
-    is = is * 1.1;
-    DataGraph::updateXaxis(-is, is);
-    DataGraph::updateLeftYaxis(-is, is);
+    s = s * 1.1;
+    DataGraph::updateXaxis(-s, s);
+    DataGraph::updateLeftYaxis(-s, s);
 }
