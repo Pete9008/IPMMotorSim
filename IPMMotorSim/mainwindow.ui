@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>660</width>
-    <height>675</height>
+    <height>692</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -722,7 +722,7 @@
       <x>410</x>
       <y>370</y>
       <width>241</width>
-      <height>241</height>
+      <height>261</height>
      </rect>
     </property>
     <property name="title">
@@ -734,7 +734,7 @@
        <x>0</x>
        <y>20</y>
        <width>242</width>
-       <height>221</height>
+       <height>241</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_3">
@@ -892,6 +892,13 @@
        <widget class="QCheckBox" name="cb_PhaseCurrs">
         <property name="text">
          <string>Include Phases</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QCheckBox" name="cb_Efficiency">
+        <property name="text">
+         <string>Efficiency</string>
         </property>
        </widget>
       </item>

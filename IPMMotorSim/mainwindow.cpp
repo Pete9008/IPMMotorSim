@@ -71,6 +71,8 @@
 //Power/Torque graph
 #define POWER 6
 #define TORQUE 7
+#define ELEC_POWER 8
+#define EFFICIENCY 9
 
 //Op point graph
 #define IDIQAMPS 2
@@ -112,6 +114,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if(settings.contains(ui->runTime->objectName())) ui->runTime->setText(settings.value(ui->runTime->objectName(),QString()).toString());
     if(settings.contains(ui->RoadGradient->objectName())) ui->RoadGradient->setText(settings.value(ui->RoadGradient->objectName(),QString()).toString());
     if(settings.contains(ui->ThrotRamps->objectName())) ui->ThrotRamps->setChecked(settings.value(ui->ThrotRamps->objectName()).toBool());
+    if(settings.contains(ui->cb_Efficiency->objectName())) ui->cb_Efficiency->setChecked(settings.value(ui->cb_Efficiency->objectName()).toBool());
 
     motorGraph = new DataGraph("motor", this);
     simulationGraph = new DataGraph("sim", this);
@@ -257,6 +260,8 @@ MainWindow::MainWindow(QWidget *parent) :
     powerGraph->setAxisText("Time (s)", "Power (kW)", "Torque (Nm)");
     powerGraph->addSeries("Power (kW)", left, POWER);
     powerGraph->addSeries("Torque (Nm)", right, TORQUE);
+    powerGraph->addSeries("Elec Power (kW)", left, ELEC_POWER);
+    powerGraph->addSeries("Efficiency (%)", left, EFFICIENCY);
     if(settings.contains(ui->cb_PowTorqTime->objectName())) ui->cb_PowTorqTime->setChecked(settings.value(ui->cb_PowTorqTime->objectName()).toBool());
     if(settings.contains(ui->rb_Speed->objectName()))
     {
@@ -289,7 +294,7 @@ MainWindow::MainWindow(QWidget *parent) :
     Param::SetInt(Param::dir, ui->direction->text().toInt());
 
     ui->Poles->setText(QString::number(Param::GetInt(Param::polepairs)));
-    ui->throttleCurrent->setText(QString::number(Param::GetInt(Param::throtcur)));
+    ui->throttleCurrent->setText(QString::number(Param::GetFloat(Param::throtcur), 'f', 1));
 
     FOC::SetMotorParameters(Param::GetFloat(Param::lqminusld)/1000, Param::GetFloat(Param::fluxlinkage)/1000);
 
@@ -336,6 +341,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue(ui->cb_PowTorqTime->objectName(), ui->cb_PowTorqTime->isChecked());
     settings.setValue(ui->cb_Simulation->objectName(), ui->cb_Simulation->isChecked());
     settings.setValue(ui->rb_Speed->objectName(), ui->rb_Speed->isChecked());
+    settings.setValue(ui->cb_Efficiency->objectName(), ui->cb_Efficiency->isChecked());
 
     settings.setValue(ui->cb_PhaseCurrs->objectName(), ui->cb_PhaseCurrs->isChecked());
     settings.setValue(ui->cb_MotorPos->objectName(), ui->cb_MotorPos->isChecked());
@@ -366,7 +372,7 @@ void MainWindow::runFor(int num_steps)
     QList<QPointF> listCVa, listCVb, listCVc, listCVq, listCVd, listCIq, listCId, listCifw;//, listCivlim;
     QList<QPointF> listVVd, listVVq, listVVq_bemf, listVVq_dueto_id, listVVd_dueto_iq, listVVq_dueto_Rq, listVVd_dueto_Rd, listVVLd, listVVLq;
     QList<QPointF> listIdIq;
-    QList<QPointF> listPower, listTorque;
+    QList<QPointF> listPower, listTorque, listElecPower, listEfficiency;
 
     //PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
     for(int i = 0;i<num_steps; i++)
@@ -507,15 +513,32 @@ void MainWindow::runFor(int num_steps)
         else
             listIdIq.append(QPointF(motor->getVd(), motor->getVq()));
 
+        double elec_power=0, efficiency=0;
+        if(ui->cb_Efficiency->isChecked())
+        {
+            elec_power = (Va * motor->getIaSamp()) + (Vb * motor->getIbSamp()) + (Vc * motor->getIcSamp());
+            efficiency = 100.0 * (motor->getPower()/elec_power);
+        }
+
         if(ui->rb_Speed->isChecked())
         {
             listPower.append(QPointF(motor->getMotorFreq()*60, motor->getPower()/1000));
             listTorque.append(QPointF(motor->getMotorFreq()*60, motor->getTorque()));
+            if(ui->cb_Efficiency->isChecked())
+            {
+                listElecPower.append(QPointF(motor->getMotorFreq()*60, elec_power/1000));
+                listEfficiency.append(QPointF(motor->getMotorFreq()*60, efficiency));
+            }
         }
         else
         {
             listPower.append(QPointF(m_time, motor->getPower()/1000));
             listTorque.append(QPointF(m_time, motor->getTorque()));
+            if(ui->cb_Efficiency->isChecked())
+            {
+                listElecPower.append(QPointF(m_time, elec_power/1000));
+                listEfficiency.append(QPointF(m_time, efficiency));
+            }
         }
 
         m_time += m_timestep;
@@ -556,6 +579,8 @@ void MainWindow::runFor(int num_steps)
 
     powerGraph->addDataPoints(listPower, POWER);
     powerGraph->addDataPoints(listTorque, TORQUE);
+    powerGraph->addDataPoints(listElecPower, ELEC_POWER);
+    powerGraph->addDataPoints(listEfficiency, EFFICIENCY);
 
     if(ui->cb_MotCurr->isChecked()) motorGraph->updateGraph();
     if(ui->cb_Simulation->isChecked()) simulationGraph->updateGraph();
