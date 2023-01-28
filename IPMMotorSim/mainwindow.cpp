@@ -290,6 +290,7 @@ MainWindow::MainWindow(QWidget *parent) :
     Param::Change(Param::nodeid);
 
     PwmGeneration::SetOpmode(0);
+    PwmGeneration::SetCurrentOffset(2048, 2048);
     PwmGeneration::SetOpmode(ui->opMode->text().toInt());
     Param::SetInt(Param::dir, ui->direction->text().toInt());
 
@@ -437,9 +438,15 @@ void MainWindow::runFor(int num_steps)
         }
         else
         {
+#ifdef STM32F1
             Va = (m_Vdc/65536) * (FOC::DutyCycles[0]-32768);
             Vb = (m_Vdc/65536) * (FOC::DutyCycles[1]-32768);
             Vc = (m_Vdc/65536) * (FOC::DutyCycles[2]-32768);
+#else
+            Va = (m_Vdc/2.0) * (FOC::DutyCycles[0]/32768);
+            Vb = (m_Vdc/2.0) * (FOC::DutyCycles[1]/32768);
+            Vc = (m_Vdc/2.0) * (FOC::DutyCycles[2]/32768);
+#endif
         }
 
         //add voltages to plot here so that we see the SVM waveforms

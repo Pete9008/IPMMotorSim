@@ -20,8 +20,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += CTRL_FOC=1
 DEFINES += CTRL_SINE=0
 DEFINES += CONTROL=1
+DEFINES += QLIMIT_FREQUENCY=-1
+DEFINES += SIMULATOR
 
-DEFINES += STM32F1
+DEFINES += STM32F4
+
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -30,9 +33,9 @@ DEFINES += STM32F1
 
 CONFIG += c++11
 
-INCLUDEPATH += $$PWD/stm32-sine/include
-INCLUDEPATH += $$PWD/stm32-sine/libopencm3/include
-INCLUDEPATH += $$PWD/stm32-sine/libopeninv/include
+INCLUDEPATH += $$PWD/stm32f405-foc/include
+INCLUDEPATH += $$PWD/stm32f405-foc/libopencm3/include
+INCLUDEPATH += $$PWD/stm32f405-foc/libopeninv/include
 
 SOURCES += \
         main.cpp \
@@ -41,16 +44,15 @@ SOURCES += \
     chartview.cpp \
     datagraph.cpp \
     motormodel.cpp \
-    stm32-sine/libopeninv/src/params.cpp \
-    stm32-sine/libopeninv/src/picontroller.cpp \
-    stm32-sine/libopeninv/src/sine_core.cpp \
-    stm32-sine/src/pwmgeneration-foc.cpp \
-    stm32-sine/libopeninv/src/my_string.c \
-    stm32-sine/libopeninv/src/errormessage.cpp \
-    stm32-sine/libopeninv/src/foc.cpp \
+    stm32f405-foc/libopeninv/src/params.cpp \
+    stm32f405-foc/libopeninv/src/picontroller.cpp \
+    stm32f405-foc/libopeninv/src/sine_core.cpp \
+    stm32f405-foc/src/pwmgeneration.cpp \
+    stm32f405-foc/libopeninv/src/my_string.c \
+    stm32f405-foc/libopeninv/src/errormessage.cpp \
+    stm32f405-foc/libopeninv/src/foc.cpp \
     teststubs.c \
     cpp_teststubs.cpp \
-    stm32-sine/src/pwmgeneration.cpp \
     idiqgraph.cpp \
     terminal_stubs.cpp
 
@@ -60,7 +62,7 @@ HEADERS += \
     chartview.h \
     datagraph.h \
     motormodel.h \
-    stm32-sine/include/pwmgeneration.h \
+    stm32f405-foc/include/pwmgeneration.h \
     teststubs.h \
     idiqgraph.h
 
