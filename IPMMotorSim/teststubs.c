@@ -60,7 +60,7 @@ void timer_generate_event(uint32_t timer_peripheral, uint32_t event) {(void)time
 void timer_enable_counter(uint32_t timer_peripheral) {(void)timer_peripheral;}
 void timer_disable_counter(uint32_t timer_peripheral) {(void)timer_peripheral;}
 void timer_set_clock_division(uint32_t timer_peripheral, uint32_t clock_div) {(void)timer_peripheral;(void)clock_div;}
-bool timer_get_flag(uint32_t timer_peripheral, uint32_t flag) {(void)timer_peripheral;(void)flag;}
+bool timer_get_flag(uint32_t timer_peripheral, uint32_t flag) {(void)timer_peripheral;(void)flag;return 0;}
 
 bool adc_get_flag(uint32_t peripheral, uint32_t flag) {(void)peripheral;(void)flag;return 0;}
 void adc_clear_flag(uint32_t peripheral, uint32_t flag) {(void)peripheral;(void)flag;}
