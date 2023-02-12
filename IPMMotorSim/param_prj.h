@@ -65,8 +65,8 @@
     PARAM_ENTRY(CAT_INVERTER,pwmpol,      PWMPOLS,   0,      1,      0,      52  ) \
     PARAM_ENTRY(CAT_INVERTER,deadtime,    "dig",     0,      255,    63,     14  ) \
     PARAM_ENTRY(CAT_INVERTER,ocurlim,     "A",       -65536, 65536,  100,    22  ) \
-    PARAM_ENTRY(CAT_INVERTER,il1gain,     "dig/A",   -100,   100,    4.7,    27  ) \
-    PARAM_ENTRY(CAT_INVERTER,il2gain,     "dig/A",   -100,   100,    4.7,    28  ) \
+    PARAM_ENTRY(CAT_INVERTER,il1gain,     "dig/A",   -100,   100,    1,      27  ) \
+    PARAM_ENTRY(CAT_INVERTER,il2gain,     "dig/A",   -100,   100,    1,      28  ) \
     PARAM_ENTRY(CAT_INVERTER,udcgain,     "dig/V",   0,      4095,   6.175,  29  ) \
     PARAM_ENTRY(CAT_INVERTER,udcofs,      "dig",     0,      4095,   0,      77  ) \
     PARAM_ENTRY(CAT_INVERTER,udclim,      "V",       0,      1000,   540,    48  ) \
