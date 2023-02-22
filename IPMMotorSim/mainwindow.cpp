@@ -133,7 +133,7 @@ MainWindow::MainWindow(QWidget *parent) :
     Param::SetInt(Param::pinswap,0); //shouldn't be a problem but may be in the future
     Param::SetInt(Param::respolepairs,Param::GetInt(Param::polepairs)); //force resolver pole pairs to match motor
 
-    ui->LqMinusLd->setText(QString::number(Param::GetFloat(Param::lqminusld), 'f', 1));
+    ui->LqMinusLd->setText(QString::number(Param::GetFloat(Param::lqminusld), 'f', 2));
     ui->FluxLinkage->setText(QString::number(Param::GetInt(Param::fluxlinkage)));
     ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
     ui->FreqMax->setText(QString::number(Param::GetFloat(Param::fmax), 'f', 1));

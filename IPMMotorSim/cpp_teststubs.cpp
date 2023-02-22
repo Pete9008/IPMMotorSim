@@ -53,7 +53,11 @@ static uint32_t fullTurns = 0;
 static bool seenNorthSignal = true;
 static int32_t distance = 0;
 static int32_t turnsSinceLastSample = 0;
+#ifdef STM32F1
 static u32fp lastFrequency = 0;
+#else
+static float lastFrequency = 0.0f;
+#endif
 static int32_t detectedDirection = 0;
 
 static uint16_t lastAngle = 0;
@@ -84,13 +88,8 @@ bool Encoder::SeenNorthSignal()
 
 #ifdef STM32F1
 void Encoder::UpdateRotorAngle(int dir)
-#else
-void Encoder::UpdateRotorAngle(void)
-#endif
 {
-    #ifdef STM32F1
     (void)dir;
-    #endif
 
     angle = g_input_angle;
     UpdateTurns(angle, lastAngle);
@@ -127,6 +126,28 @@ void Encoder::UpdateTurns(uint16_t angle, uint16_t lastAngle)
 
    turnsSinceLastSample += signedDiff;
 }
+#else
+void Encoder::UpdateRotorAngle()
+{
+   angle = g_input_angle;
+
+   int signedDiff = (int)angle - (int)lastAngle;
+   int absDiff = ABS(signedDiff);
+   int sign = signedDiff < 0 ? -1 : 1;
+
+   if (absDiff > (TWO_PI / 2)) //wrap detection
+   {
+      sign = -sign;
+      signedDiff += sign * TWO_PI;
+      absDiff = ABS(signedDiff);
+   }
+
+   turnsSinceLastSample += signedDiff;
+
+   startupDelay = startupDelay > 0 ? startupDelay - 1 : 0;
+   lastAngle = angle;
+}
+#endif
 
 void Encoder::UpdateRotorFrequency(int callingFrequency)
 {
@@ -135,7 +156,11 @@ void Encoder::UpdateRotorFrequency(int callingFrequency)
     int absTurns = ABS(turnsSinceLastSample);
     if (startupDelay == 0 && absTurns > STABLE_ANGLE)
     {
+#ifdef STM32F1
      lastFrequency = (callingFrequency * absTurns) / FP_TOINT(TWO_PI);
+#else
+     lastFrequency = (callingFrequency * absTurns) / (TWO_PI);
+#endif
      detectedDirection = turnsSinceLastSample > 0 ? 1 : -1;
     }
     else
@@ -151,10 +176,16 @@ uint16_t Encoder::GetRotorAngle()
    return angle;
 }
 
+#ifdef STM32F1
 u32fp Encoder::GetRotorFrequency()
+#else
+float Encoder::GetRotorFrequency()
+#endif
 {
    return lastFrequency;
 }
+
+
 
 int Encoder::GetRotorDirection()
 {

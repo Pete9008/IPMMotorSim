@@ -29,8 +29,8 @@
 /*              category     name         unit       min     max     default id */
 
 #define MOTOR_PARAMETERS_COMMON \
-    PARAM_ENTRY(CAT_MOTOR,   polepairs,   "",        1,      16,     2,      32  ) \
-    PARAM_ENTRY(CAT_MOTOR,   respolepairs,"",        1,      16,     1,      93  ) \
+    PARAM_ENTRY(CAT_MOTOR,   polepairs,   "",        1,      16,     4,      32  ) \
+    PARAM_ENTRY(CAT_MOTOR,   respolepairs,"",        1,      16,     4,      93  ) \
     PARAM_ENTRY(CAT_MOTOR,   fmax,        "Hz",      21,     1000,   200,    9   ) \
     PARAM_ENTRY(CAT_MOTOR,   dirchrpm,    "rpm",     0,      20000,  100,    87  ) \
     PARAM_ENTRY(CAT_MOTOR,   dirmode,     DIRMODES,  0,      4,      1,      95  ) \
@@ -38,19 +38,19 @@
 
 #define MOTOR_PARAMETERS_FOC \
     PARAM_ENTRY(CAT_MOTOR,   curkp,       "",        0,      20000,  4000,   107 ) \
-    PARAM_ENTRY(CAT_MOTOR,   curki,       "",        0,      100000, 10000,  108 ) \
+    PARAM_ENTRY(CAT_MOTOR,   curki,       "",        0,      100000, 8000,   108 ) \
     PARAM_ENTRY(CAT_MOTOR,   vlimflt,     "",        0,      16,     9,      145 ) \
     PARAM_ENTRY(CAT_MOTOR,   vlimmargin,  "dig",     0,      10000,  2000,   141 ) \
-    PARAM_ENTRY(CAT_MOTOR,   fwcurmax,    "A",       -1000,  0,     -280,    144 ) \
+    PARAM_ENTRY(CAT_MOTOR,   fwcurmax,    "A",       -1000,  0,     -468,    144 ) \
     PARAM_ENTRY(CAT_MOTOR,   syncofs,     "dig",     0,      65535,  0,      70  ) \
-    PARAM_ENTRY(CAT_MOTOR,   lqminusld,   "mH",      0,      1000,   0.14,   139 ) \
+    PARAM_ENTRY(CAT_MOTOR,   lqminusld,   "mH",      0,      1000,   0.20,   139 ) \
     PARAM_ENTRY(CAT_MOTOR,   fluxlinkage, "mWeber",  0,      1000,   75,     140 ) \
     PARAM_ENTRY(CAT_MOTOR,   syncadv,     "dig/Hz",  0,      65535,  10,     133 ) \
 
 #define INVERTER_PARAMETERS_COMMON \
     PARAM_ENTRY(CAT_INVERTER,deadtime,    "dig",     0,      255,    63,     14  ) \
-    PARAM_ENTRY(CAT_INVERTER,il1gain,     "dig/A",   -100,   100,    4.7,    27  ) \
-    PARAM_ENTRY(CAT_INVERTER,il2gain,     "dig/A",   -100,   100,    4.7,    28  ) \
+    PARAM_ENTRY(CAT_INVERTER,il1gain,     "dig/A",   -100,   100,    3,      27  ) \
+    PARAM_ENTRY(CAT_INVERTER,il2gain,     "dig/A",   -100,   100,    3,      28  ) \
     PARAM_ENTRY(CAT_INVERTER,udcgain,     "dig/V",   0,      4095,   6.175,  29  ) \
     PARAM_ENTRY(CAT_INVERTER,udcofs,      "dig",     0,      4095,   0,      77  ) \
     PARAM_ENTRY(CAT_INVERTER,udclim,      "V",       0,      1000,   540,    48  ) \
@@ -83,7 +83,7 @@
     PARAM_ENTRY(CAT_THROTTLE,throtramprpm,"rpm",     0,      20000,  20000,  85  )
 
 #define THROTTLE_PARAMETERS_FOC \
-   PARAM_ENTRY(CAT_THROTTLE,throtcur,    "A/%",       0,     10,     3.5,    105  )
+   PARAM_ENTRY(CAT_THROTTLE,throtcur,    "A/%",       0,     10,     4.0,    105  )
 
 #define REGEN_PARAMETERS \
     PARAM_ENTRY(CAT_REGEN,   brakeregen,  "%",       -100,   0,      -50,    38  ) \
