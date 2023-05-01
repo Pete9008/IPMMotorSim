@@ -27,7 +27,7 @@ MotorModel::MotorModel(double wheelSize,double ratio,double roadGradient,double 
 
 void MotorModel::Restart(void)
 {
-    m_Position = 0;
+    m_Position = 960;
     m_Frequency = 0;
     m_Speed = 0;
     m_Ia = 0;

@@ -147,6 +147,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->IqManual->setText(QString::number(Param::GetFloat(Param::manualiq), 'f', 1));
     ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
     ui->throttleCurrent->setText(QString::number(Param::GetFloat(Param::throtcur), 'f', 1));
+    ui->testMode->setText(QString::number(Param::GetInt(Param::testmode)));
 
     m_wheelSize = ui->wheelSize->text().toDouble();
     m_vehicleWeight = ui->vehicleWeight->text().toDouble();
@@ -428,7 +429,12 @@ void MainWindow::runFor(int num_steps)
             g_il2_input += QRandomGenerator::global()->bounded(noise) - (noise/2);
         }
 
-        PwmGeneration::Run();
+        //PwmGeneration::Run();
+
+        if(MOD_RUN == PwmGeneration::GetOpmode())
+           PwmGeneration::Run();
+        else if(MOD_MANUAL == PwmGeneration::GetOpmode())
+           PwmGeneration::TestModeRun();
 
         if(disablePWM) //needed to allow OpeinInverter initialisation to complete
         {
@@ -470,7 +476,7 @@ void MainWindow::runFor(int num_steps)
             motor->Step(Va,Vb,Vc);
         m_oldVa = Va;
         m_oldVb = Vb;
-        m_oldVb = Vb;
+        m_oldVc = Vc;
 
         //motor->Step(0,0,0);
         if(ui->cb_PhaseCurrs->isChecked())
@@ -479,8 +485,8 @@ void MainWindow::runFor(int num_steps)
             listIb.append(QPointF(m_time, motor->getIbSamp()));
             listIc.append(QPointF(m_time, motor->getIcSamp()));
         }
-        listIq.append(QPointF(m_time, motor->getIq()));
-        listId.append(QPointF(m_time, motor->getId()));
+        //listIq.append(QPointF(m_time, motor->getIq()));
+        //listId.append(QPointF(m_time, motor->getId()));
 
         listMFreq.append(QPointF(m_time, (motor->getMotorFreq()*m_Poles)));
         if(ui->cb_MotorPos->isChecked())
@@ -496,8 +502,8 @@ void MainWindow::runFor(int num_steps)
 //            listCVb.append(QPointF(m_time, Vb));
 //            listCVc.append(QPointF(m_time, Vc));
 //        }
-        listCVq.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::uq)));
-        listCVd.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::ud)));
+        //listCVq.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::uq)));
+        //listCVd.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::ud)));
 
         listCIq.append(QPointF(m_time, Param::GetFloat(Param::iq)));
         listCId.append(QPointF(m_time, Param::GetFloat(Param::id)));
@@ -596,6 +602,8 @@ void MainWindow::runFor(int num_steps)
     if(ui->cb_MotVolt->isChecked()) voltageGraph->updateGraph();
     if(ui->cb_OpPoint->isChecked()) idigGraph->updateGraph(ui->rb_OP_Amps->isChecked());
     if(ui->cb_PowTorqTime->isChecked()) powerGraph->updateGraph();
+
+    ui->opMode->setText(QString::number(PwmGeneration::GetOpmode())); //update UI in case inverter tripped
 }
 
 void MainWindow::on_vehicleWeight_editingFinished()
@@ -942,3 +950,8 @@ void MainWindow::on_rb_OP_Amps_toggled(bool checked)
     }
 }
 
+
+void MainWindow::on_testMode_editingFinished()
+{
+    Param::Set(Param::testmode, FP_FROMINT(ui->testMode->text().toInt()));
+}

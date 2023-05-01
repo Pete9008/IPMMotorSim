@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>660</width>
+    <width>680</width>
     <height>692</height>
    </rect>
   </property>
@@ -412,7 +412,7 @@
       <x>200</x>
       <y>10</y>
       <width>201</width>
-      <height>541</height>
+      <height>561</height>
      </rect>
     </property>
     <property name="title">
@@ -424,7 +424,7 @@
        <x>0</x>
        <y>20</y>
        <width>201</width>
-       <height>521</height>
+       <height>539</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_4">
@@ -479,14 +479,14 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="labelDir">
         <property name="text">
          <string>Direction (-1=R,0=N,1=F)</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QLineEdit" name="direction">
         <property name="enabled">
          <bool>true</bool>
@@ -496,14 +496,14 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="labelIqManual">
         <property name="text">
          <string>Iq Manual</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="5" column="1">
        <widget class="QLineEdit" name="IqManual">
         <property name="enabled">
          <bool>true</bool>
@@ -513,14 +513,14 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="6" column="0">
        <widget class="QLabel" name="labelIdManual">
         <property name="text">
          <string>Id Manual</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="6" column="1">
        <widget class="QLineEdit" name="IdManual">
         <property name="enabled">
          <bool>true</bool>
@@ -530,7 +530,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
+      <item row="7" column="0">
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -543,14 +543,14 @@
         </property>
        </spacer>
       </item>
-      <item row="7" column="0">
+      <item row="8" column="0">
        <widget class="QLabel" name="labelPoles">
         <property name="text">
          <string>Motor Poles</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
+      <item row="8" column="1">
        <widget class="QLineEdit" name="Poles">
         <property name="enabled">
          <bool>true</bool>
@@ -560,14 +560,14 @@
         </property>
        </widget>
       </item>
-      <item row="8" column="0">
+      <item row="9" column="0">
        <widget class="QLabel" name="labelCurKp">
         <property name="text">
          <string>Current Kp</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="1">
+      <item row="9" column="1">
        <widget class="QLineEdit" name="CurrentKp">
         <property name="enabled">
          <bool>true</bool>
@@ -577,14 +577,14 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="0">
+      <item row="10" column="0">
        <widget class="QLabel" name="labelCurKi">
         <property name="text">
          <string>Current Ki</string>
         </property>
        </widget>
       </item>
-      <item row="9" column="1">
+      <item row="10" column="1">
        <widget class="QLineEdit" name="CurrentKi">
         <property name="enabled">
          <bool>true</bool>
@@ -594,14 +594,14 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="0">
+      <item row="11" column="0">
        <widget class="QLabel" name="labelVLimMargin">
         <property name="text">
          <string>VLim Margin</string>
         </property>
        </widget>
       </item>
-      <item row="10" column="1">
+      <item row="11" column="1">
        <widget class="QLineEdit" name="VLimMargin">
         <property name="enabled">
          <bool>true</bool>
@@ -611,14 +611,14 @@
         </property>
        </widget>
       </item>
-      <item row="11" column="0">
+      <item row="12" column="0">
        <widget class="QLabel" name="labelVLimFlt">
         <property name="text">
          <string>VLim Flt</string>
         </property>
        </widget>
       </item>
-      <item row="11" column="1">
+      <item row="12" column="1">
        <widget class="QLineEdit" name="VLimFlt">
         <property name="enabled">
          <bool>true</bool>
@@ -628,14 +628,14 @@
         </property>
        </widget>
       </item>
-      <item row="12" column="0">
+      <item row="13" column="0">
        <widget class="QLabel" name="labelLqMinusLd">
         <property name="text">
          <string>Lq - Ld (mH)</string>
         </property>
        </widget>
       </item>
-      <item row="12" column="1">
+      <item row="13" column="1">
        <widget class="QLineEdit" name="LqMinusLd">
         <property name="enabled">
          <bool>true</bool>
@@ -645,14 +645,14 @@
         </property>
        </widget>
       </item>
-      <item row="13" column="0">
+      <item row="14" column="0">
        <widget class="QLabel" name="labelSyncAdv">
         <property name="text">
          <string>SyncAdv (dig/Hz)</string>
         </property>
        </widget>
       </item>
-      <item row="13" column="1">
+      <item row="14" column="1">
        <widget class="QLineEdit" name="SyncAdv">
         <property name="enabled">
          <bool>true</bool>
@@ -662,14 +662,14 @@
         </property>
        </widget>
       </item>
-      <item row="14" column="0">
+      <item row="15" column="0">
        <widget class="QLabel" name="labelSyncOfs">
         <property name="text">
          <string>SyncOfs</string>
         </property>
        </widget>
       </item>
-      <item row="14" column="1">
+      <item row="15" column="1">
        <widget class="QLineEdit" name="SyncOfs">
         <property name="enabled">
          <bool>true</bool>
@@ -679,14 +679,14 @@
         </property>
        </widget>
       </item>
-      <item row="15" column="0">
+      <item row="16" column="0">
        <widget class="QLabel" name="labelFWCurrMax">
         <property name="text">
          <string>FW Current Max (A)</string>
         </property>
        </widget>
       </item>
-      <item row="15" column="1">
+      <item row="16" column="1">
        <widget class="QLineEdit" name="FWCurrMax">
         <property name="enabled">
          <bool>true</bool>
@@ -696,20 +696,37 @@
         </property>
        </widget>
       </item>
-      <item row="16" column="0">
+      <item row="17" column="0">
        <widget class="QLabel" name="labelFMax">
         <property name="text">
          <string>FMax (Hz)</string>
         </property>
        </widget>
       </item>
-      <item row="16" column="1">
+      <item row="17" column="1">
        <widget class="QLineEdit" name="FreqMax">
         <property name="enabled">
          <bool>true</bool>
         </property>
         <property name="text">
          <string>166</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="testMode">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelTestMode">
+        <property name="text">
+         <string>Test (1=FSp,RSp,Phs)</string>
         </property>
        </widget>
       </item>
@@ -911,7 +928,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>660</width>
+     <width>680</width>
      <height>22</height>
     </rect>
    </property>
