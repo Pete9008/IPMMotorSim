@@ -174,7 +174,7 @@
 
 /***** Enum String definitions *****/
 #define OPMODES      "0=Off, 1=Run, 2=ManualRun"
-#define TESTMODES     "0=Off, 1=PhaseCheck, 2=ForwardTestSpin, 3=ReverseTestSpin"
+#define TESTMODES    "0=Off, 1=Resolver, 2=PhaseCheck, 3=ForwardTestSpin, 4=BidirTestSpin"
 #define DIRS         "-1=Reverse, 0=Neutral, 1=Forward"
 #define TRIPMODES    "0=AllOff, 1=DcSwOn, 2=PrechargeOn, 3=AutoResume"
 #define SNS_HS       "0=JCurve, 1=Semikron, 2=MBB600, 3=KTY81, 4=PT1000, 5=NTCK45_2k2, 6=Leaf, 7=BMW-i3"
@@ -236,9 +236,10 @@ enum _modes
 enum _testmodes
 {
    TEST_OFF=0,
+   TEST_RESLV,
    TEST_PHASE,
    TEST_SPINF,
-   TEST_SPINR,
+   TEST_SPINBIDIR,
    TEST_LAST
 };
 

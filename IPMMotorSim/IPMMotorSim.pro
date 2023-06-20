@@ -63,7 +63,8 @@ HEADERS += \
     motormodel.h \
     stm32f405-foc/include/pwmgeneration.h \
     teststubs.h \
-    idiqgraph.h
+    idiqgraph.h \
+    param_prj.h
 
 FORMS += \
         mainwindow.ui

@@ -383,7 +383,9 @@ void MainWindow::runFor(int num_steps)
         if((uint32_t)(m_time*100) != m_old_time)
         {
             m_old_time = (uint32_t)(m_time*100);
+#ifdef STM32F1
             Encoder::UpdateRotorFrequency(100);
+#endif
 
             int requestedTorque = ui->torqueDemand->text().toInt() * 100;
             if(ui->ThrotRamps->isChecked())
@@ -485,8 +487,8 @@ void MainWindow::runFor(int num_steps)
             listIb.append(QPointF(m_time, motor->getIbSamp()));
             listIc.append(QPointF(m_time, motor->getIcSamp()));
         }
-        //listIq.append(QPointF(m_time, motor->getIq()));
-        //listId.append(QPointF(m_time, motor->getId()));
+        listIq.append(QPointF(m_time, motor->getIq()));
+        listId.append(QPointF(m_time, motor->getId()));
 
         listMFreq.append(QPointF(m_time, (motor->getMotorFreq()*m_Poles)));
         if(ui->cb_MotorPos->isChecked())
@@ -502,8 +504,8 @@ void MainWindow::runFor(int num_steps)
 //            listCVb.append(QPointF(m_time, Vb));
 //            listCVc.append(QPointF(m_time, Vc));
 //        }
-        //listCVq.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::uq)));
-        //listCVd.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::ud)));
+        listCVq.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::uq)));
+        listCVd.append(QPointF(m_time, (m_Vdc/65536) * Param::GetFloat(Param::ud)));
 
         listCIq.append(QPointF(m_time, Param::GetFloat(Param::iq)));
         listCId.append(QPointF(m_time, Param::GetFloat(Param::id)));
@@ -667,6 +669,7 @@ void MainWindow::on_FluxLinkage_editingFinished()
 void MainWindow::on_LoopFreq_editingFinished()
 {
     m_timestep = 1.0 / ui->LoopFreq->text().toDouble();
+    motor->setTimestep(m_timestep);
 }
 
 void MainWindow::on_pbRunFor_clicked()

@@ -127,8 +127,10 @@ void Encoder::UpdateTurns(uint16_t angle, uint16_t lastAngle)
    turnsSinceLastSample += signedDiff;
 }
 #else
-void Encoder::UpdateRotorAngle()
+void Encoder::UpdateRotorAngle(uint32_t updateRate, uint32_t runEveryNth)
 {
+   static uint32_t freqUpdateCount = 0;
+   static uint32_t stableCount = 1;
    angle = g_input_angle;
 
    int signedDiff = (int)angle - (int)lastAngle;
@@ -146,9 +148,34 @@ void Encoder::UpdateRotorAngle()
 
    startupDelay = startupDelay > 0 ? startupDelay - 1 : 0;
    lastAngle = angle;
+
+   freqUpdateCount++;
+   if(freqUpdateCount >= runEveryNth)
+   {
+     freqUpdateCount = 0;
+     distance += turnsSinceLastSample;
+
+     int absTurns = ABS(turnsSinceLastSample);
+     if (absTurns > STABLE_ANGLE)
+     {
+        lastFrequency = ((float)(updateRate * absTurns)) / (float)(TWO_PI*stableCount);
+        detectedDirection = turnsSinceLastSample > 0 ? 1 : -1;
+        turnsSinceLastSample = 0;
+        stableCount = 1;
+     }
+     else
+     {
+        if(++stableCount > 20)
+        {
+           lastFrequency = 0.0f;
+           stableCount = 1;
+        }
+     }
+   }
 }
 #endif
 
+#ifdef STM32F1
 void Encoder::UpdateRotorFrequency(int callingFrequency)
 {
     distance += turnsSinceLastSample;
@@ -156,11 +183,8 @@ void Encoder::UpdateRotorFrequency(int callingFrequency)
     int absTurns = ABS(turnsSinceLastSample);
     if (startupDelay == 0 && absTurns > STABLE_ANGLE)
     {
-#ifdef STM32F1
      lastFrequency = (callingFrequency * absTurns) / FP_TOINT(TWO_PI);
-#else
-     lastFrequency = (callingFrequency * absTurns) / (TWO_PI);
-#endif
+
      detectedDirection = turnsSinceLastSample > 0 ? 1 : -1;
     }
     else
@@ -170,6 +194,7 @@ void Encoder::UpdateRotorFrequency(int callingFrequency)
     turnsSinceLastSample = 0;
 
 }
+#endif
 
 uint16_t Encoder::GetRotorAngle()
 {
@@ -230,7 +255,9 @@ void Param::Change(Param::PARAM_NUM paramNum)
    }
 }
 
+#ifdef STM32F1
 void Encoder::SetPwmFrequency(uint32_t frq) {(void)frq;}
+#endif
 
 int printf(const char *format, ...) {(void)format;return 0;}
 
