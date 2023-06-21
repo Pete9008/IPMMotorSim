@@ -21,6 +21,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QStandardItemModel>
 #include "datagraph.h"
 #include "idiqgraph.h"
 #include "motormodel.h"
@@ -38,6 +39,8 @@ class MainWindow : public QMainWindow
 private:
     void runFor(int num_steps);
     void calcFluxLinkage(void);
+    void updateParams(void);
+    void overrideParams(void);
 
     DataGraph *motorGraph;
     DataGraph *simulationGraph;
@@ -60,7 +63,6 @@ private:
     double m_Lq;
     double m_Ld;
     double m_Rs;
-    double m_Poles;
     double m_fluxLinkage;
     double m_syncdelay;
     double m_samplingPoint;
@@ -71,6 +73,8 @@ private:
 
     double m_runTime;
     int m_lastTorqueDemand;
+
+    QStandardItemModel params;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -109,37 +113,13 @@ private slots:
 
     void on_Rs_editingFinished();
 
-    void on_Poles_editingFinished();
-
     void on_torqueDemand_editingFinished();
 
-    void on_throttleCurrent_editingFinished();
-
-    void on_opMode_editingFinished();
-
-    void on_direction_editingFinished();
-
-    void on_IqManual_editingFinished();
-
-    void on_IdManual_editingFinished();
-
-    void on_CurrentKp_editingFinished();
-
-    void on_CurrentKi_editingFinished();
-
-    void on_SyncAdv_editingFinished();
-
-    void on_LqMinusLd_editingFinished();
-
     void on_SyncDelay_editingFinished();
-
-    void on_FreqMax_editingFinished();
 
     void on_SamplingPoint_editingFinished();
 
     void on_pbTransient_clicked();
-
-    void on_SyncOfs_editingFinished();
 
     void on_pbAccelCoast_clicked();
 
@@ -163,15 +143,21 @@ private slots:
 
     void on_runTime_editingFinished();
 
-    void on_VLimMargin_editingFinished();
-
-    void on_VLimFlt_editingFinished();
-
-    void on_FWCurrMax_editingFinished();
-
     void on_rb_OP_Amps_toggled(bool checked);
 
     void on_testMode_editingFinished();
+
+    void on_direction_editingFinished();
+
+    void on_opMode_editingFinished();
+
+    void on_pbLoadMot_clicked();
+
+    void on_pbSaveMot_clicked();
+
+    void on_pbLoadInv_clicked();
+
+    void on_pbSaveInv_clicked();
 
 private:
     Ui::MainWindow *ui;

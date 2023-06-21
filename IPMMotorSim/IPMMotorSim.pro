@@ -62,7 +62,8 @@ SOURCES += \
     teststubs.c \
     cpp_teststubs.cpp \
     idiqgraph.cpp \
-    terminal_stubs.cpp
+    terminal_stubs.cpp \
+    params_prj.cpp
 
 STM32F1 {SOURCES += $$FW_PATH/src/pwmgeneration-foc.cpp}
 
@@ -74,8 +75,7 @@ HEADERS += \
     motormodel.h \
     $$FW_PATH/include/pwmgeneration.h \
     teststubs.h \
-    idiqgraph.h \
-    param_prj.h
+    idiqgraph.h
 
 FORMS += \
         mainwindow.ui

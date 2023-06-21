@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of the IPMMotorSim project
  *
  * Copyright (C) 2022 Pete9008 <openinverter.org>
@@ -22,6 +22,12 @@
 #include <QtMath>
 #include <QRandomGenerator>
 #include <QSettings>
+#include <QTreeView>
+#include <QMetaType>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include "pwmgeneration.h"
 #include "foc.h"
 #include "params.h"
@@ -105,6 +111,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if(settings.contains(ui->Lq->objectName())) ui->Lq->setText(settings.value(ui->Lq->objectName(),QString()).toString());
     if(settings.contains(ui->Ld->objectName())) ui->Ld->setText(settings.value(ui->Ld->objectName(),QString()).toString());
     if(settings.contains(ui->Rs->objectName())) ui->Rs->setText(settings.value(ui->Rs->objectName(),QString()).toString());
+    if(settings.contains(ui->FluxLinkage->objectName())) ui->FluxLinkage->setText(settings.value(ui->FluxLinkage->objectName(),QString()).toString());
     if(settings.contains(ui->SyncDelay->objectName())) ui->SyncDelay->setText(settings.value(ui->SyncDelay->objectName(),QString()).toString());
     if(settings.contains(ui->LoopFreq->objectName())) ui->LoopFreq->setText(settings.value(ui->LoopFreq->objectName(),QString()).toString());
     if(settings.contains(ui->SamplingPoint->objectName())) ui->SamplingPoint->setText(settings.value(ui->SamplingPoint->objectName(),QString()).toString());
@@ -128,28 +135,46 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ANA_IN_CONFIGURE(ANA_IN_LIST);
 
-    //set any parameters that can upset simulation to safe values
-    Param::SetInt(Param::syncofs,0); //simulator assumes perfect alignment
-    Param::SetInt(Param::pinswap,0); //shouldn't be a problem but may be in the future
-    Param::SetInt(Param::respolepairs,Param::GetInt(Param::polepairs)); //force resolver pole pairs to match motor
+    //read parameters to treeview
+    //model = new QStandardItemModel();
+    QString category(Param::GetAttrib((Param::PARAM_NUM)0)->category);
+    const Param::Attributes *pAtr;
+    QStandardItem *item = new QStandardItem(category);
+    for (uint32_t idx = 0; idx < Param::PARAM_LAST; idx++)
+    {
+        pAtr = Param::GetAttrib((Param::PARAM_NUM)idx);
 
-    ui->LqMinusLd->setText(QString::number(Param::GetFloat(Param::lqminusld), 'f', 2));
-    ui->FluxLinkage->setText(QString::number(Param::GetInt(Param::fluxlinkage)));
-    ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
-    ui->FreqMax->setText(QString::number(Param::GetFloat(Param::fmax), 'f', 1));
-    ui->Poles->setText(QString::number(Param::GetFloat(Param::polepairs), 'f', 1));
-    ui->CurrentKp->setText(QString::number(Param::GetInt(Param::curkp)));
-    ui->CurrentKi->setText(QString::number(Param::GetInt(Param::curki)));
-    ui->VLimMargin->setText(QString::number(Param::GetInt(Param::vlimmargin)));
-    ui->VLimFlt->setText(QString::number(Param::GetInt(Param::vlimflt)));
-    ui->FWCurrMax->setText(QString::number(Param::GetInt(Param::fwcurmax)));
-    ui->IdManual->setText(QString::number(Param::GetFloat(Param::manualid), 'f', 1));
-    ui->IqManual->setText(QString::number(Param::GetFloat(Param::manualiq), 'f', 1));
-    ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
-    ui->throttleCurrent->setText(QString::number(Param::GetFloat(Param::throtcur), 'f', 1));
-#ifdef STM32F4
-    ui->testMode->setText(QString::number(Param::GetInt(Param::testmode)));
-#endif
+        if(category != pAtr->category)
+        {
+            params.appendRow(item);
+            category = pAtr->category;
+            item = new QStandardItem(category);
+            item->setEditable( false );
+        }
+
+        QList<QStandardItem *> list;
+        QStandardItem *child;
+        child = new QStandardItem( QString(pAtr->name) );
+        child->setEditable( false );
+        list.append(child); //Parameter
+        child = new QStandardItem( QString("%0").arg(Param::GetFloat((Param::PARAM_NUM)idx)) );
+        QString units(pAtr->unit);
+        child->setToolTip(units); //Unit
+        list.append(child); //Value
+        child = new QStandardItem( QString("%0").arg(idx) );
+        child->setEditable( false );
+        list.append(child); //idx
+        item->appendRow( list );
+    }
+
+    params.setHorizontalHeaderItem( 0, new QStandardItem( "Parameter" ) );
+    params.setHorizontalHeaderItem( 1, new QStandardItem( "Value" ) );
+    params.setHorizontalHeaderItem( 2, new QStandardItem( "idx" ) );
+
+    ui->treeView->setModel( &params );
+    ui->treeView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    //ui->treeView->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    //ui->treeView->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
 
     m_wheelSize = ui->wheelSize->text().toDouble();
     m_vehicleWeight = ui->vehicleWeight->text().toDouble();
@@ -157,7 +182,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_Lq = ui->Lq->text().toDouble()/1000; //entered in mH
     m_Ld = ui->Ld->text().toDouble()/1000; //entered in mH
     m_Rs = ui->Rs->text().toDouble();
-    m_Poles = ui->Poles->text().toDouble();
     m_fluxLinkage = ui->FluxLinkage->text().toDouble()/1000; //entered in mWeber
     m_syncdelay = ui->SyncDelay->text().toDouble()/1000000; //entered in uS
     m_samplingPoint = ui->SamplingPoint->text().toDouble()/100.0; //entered in %
@@ -168,7 +192,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_Vdc = ui->Vdc->text().toDouble();
     Param::SetFloat(Param::udc, m_Vdc);
 
-    motor = new MotorModel(m_wheelSize,m_gearRatio,m_roadGradient,m_vehicleWeight,m_Lq,m_Ld,m_Rs,m_Poles,m_fluxLinkage,m_timestep,m_syncdelay,m_samplingPoint);
+    motor = new MotorModel(m_wheelSize,m_gearRatio,m_roadGradient,m_vehicleWeight,m_Lq,m_Ld,m_Rs,Param::GetFloat(Param::polepairs),m_fluxLinkage,m_timestep,m_syncdelay,m_samplingPoint);
+
+    //set any parameters that can upset simulation to safe values
+    overrideParams();
 
     m_time = 0;
     m_old_time = 0;
@@ -297,9 +324,6 @@ MainWindow::MainWindow(QWidget *parent) :
     PwmGeneration::SetOpmode(ui->opMode->text().toInt());
     Param::SetInt(Param::dir, ui->direction->text().toInt());
 
-    ui->Poles->setText(QString::number(Param::GetInt(Param::polepairs)));
-    ui->throttleCurrent->setText(QString::number(Param::GetFloat(Param::throtcur), 'f', 1));
-
     FOC::SetMotorParameters(Param::GetFloat(Param::lqminusld)/1000, Param::GetFloat(Param::fluxlinkage)/1000);
 
     PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
@@ -327,6 +351,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue(ui->Lq->objectName(), ui->Lq->text());
     settings.setValue(ui->Ld->objectName(), ui->Ld->text());
     settings.setValue(ui->Rs->objectName(), ui->Rs->text());
+    settings.setValue(ui->FluxLinkage->objectName(), ui->FluxLinkage->text());
     settings.setValue(ui->SyncDelay->objectName(), ui->SyncDelay->text());
     settings.setValue(ui->LoopFreq->objectName(), ui->LoopFreq->text());
     settings.setValue(ui->SamplingPoint->objectName(), ui->SamplingPoint->text());
@@ -362,6 +387,38 @@ void MainWindow::closeEvent(QCloseEvent *event)
     QWidget::closeEvent(event);
 }
 
+void MainWindow::updateParams(void)
+{
+    //update OI parameters from params model
+    for(int r = 0; r < params.rowCount(); ++r)
+    {
+        QModelIndex parent = params.index(r, 0);
+        int rows = params.rowCount(parent);
+        for(int r = 0; r < rows; ++r)
+        {
+            QVariant name = params.index(r,0,parent).data();
+            QVariant value = params.index(r,1,parent).data();
+            QVariant idx = params.index(r,2,parent).data();
+            if(idx.canConvert(QMetaType::Int) && value.canConvert(QMetaType::Float))
+            {
+                float val = value.toFloat();
+                int id = idx.toInt();
+                Param::SetFloat((Param::PARAM_NUM)id,val);
+            }
+        }
+    }
+    overrideParams();
+    Param::Change(Param::PARAM_LAST);
+}
+
+void MainWindow::overrideParams(void)
+{
+    Param::SetInt(Param::syncofs,0); //simulator assumes perfect alignment
+    Param::SetInt(Param::pinswap,0); //shouldn't be a problem but may be in the future
+    Param::SetInt(Param::respolepairs,Param::GetInt(Param::polepairs)); //force resolver pole pairs to match motor
+    motor->setPoles(Param::GetFloat(Param::polepairs)); //shouldn't change but just in case!
+}
+
 void MainWindow::runFor(int num_steps)
 {
     double Va = 0;
@@ -370,6 +427,8 @@ void MainWindow::runFor(int num_steps)
 
     if(num_steps<0)
         return;
+
+    updateParams();
 
     QList<QPointF> listIa, listIb, listIc, listIq, listId;
     QList<QPointF> listMFreq, listMPos, listContMPos;
@@ -494,7 +553,7 @@ void MainWindow::runFor(int num_steps)
         listIq.append(QPointF(m_time, motor->getIq()));
         listId.append(QPointF(m_time, motor->getId()));
 
-        listMFreq.append(QPointF(m_time, (motor->getMotorFreq()*m_Poles)));
+        listMFreq.append(QPointF(m_time, (motor->getMotorFreq()*Param::GetInt(Param::polepairs))));
         if(ui->cb_MotorPos->isChecked())
         {
             listMPos.append(QPointF(m_time, motor->getMotorPosition()));
@@ -608,9 +667,7 @@ void MainWindow::runFor(int num_steps)
     if(ui->cb_MotVolt->isChecked()) voltageGraph->updateGraph();
     if(ui->cb_OpPoint->isChecked()) idigGraph->updateGraph(ui->rb_OP_Amps->isChecked());
     if(ui->cb_PowTorqTime->isChecked()) powerGraph->updateGraph();
-#ifdef STM32F4
-    ui->opMode->setText(QString::number(PwmGeneration::GetOpmode())); //update UI in case inverter tripped
-#endif
+    //ui->opMode->setText(QString::number(PwmGeneration::GetOpmode())); //update UI in case inverter tripped
 }
 
 void MainWindow::on_vehicleWeight_editingFinished()
@@ -653,14 +710,6 @@ void MainWindow::on_Rs_editingFinished()
 {
     m_Rs = ui->Rs->text().toDouble();
     motor->setRs(m_Rs);
-}
-
-void MainWindow::on_Poles_editingFinished()
-{
-    m_Poles = ui->Poles->text().toDouble();
-    Param::Set(Param::polepairs, FP_FROMINT(ui->Poles->text().toInt()));
-    Param::Set(Param::respolepairs,FP_FROMINT(ui->Poles->text().toInt())); //force resolver pole pairs to match motor
-    motor->setPoles(m_Poles);
 }
 
 void MainWindow::on_FluxLinkage_editingFinished()
@@ -736,62 +785,10 @@ void MainWindow::on_torqueDemand_editingFinished()
     PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat());
 }
 
-void MainWindow::on_throttleCurrent_editingFinished()
-{
-    Param::Set(Param::throtcur, FP_FROMFLT(ui->throttleCurrent->text().toFloat()));
-    PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat()); //make sure is recalculated
-}
-
-void MainWindow::on_opMode_editingFinished()
-{
-    PwmGeneration::SetOpmode(ui->opMode->text().toInt());
-}
-
-void MainWindow::on_direction_editingFinished()
-{
-    Param::Set(Param::dir, FP_FROMINT(ui->direction->text().toInt()));
-}
-
-void MainWindow::on_IqManual_editingFinished()
-{
-    Param::Set(Param::manualiq, FP_FROMFLT(ui->IqManual->text().toFloat()));
-}
-
-void MainWindow::on_IdManual_editingFinished()
-{
-    Param::Set(Param::manualid, FP_FROMFLT(ui->IdManual->text().toFloat()));
-}
-
-void MainWindow::on_CurrentKp_editingFinished()
-{
-    Param::Set(Param::curkp, FP_FROMINT(ui->CurrentKp->text().toInt()));
-}
-
-void MainWindow::on_CurrentKi_editingFinished()
-{
-    Param::Set(Param::curki, FP_FROMINT(ui->CurrentKi->text().toInt()));
-}
-
-void MainWindow::on_SyncAdv_editingFinished()
-{
-    Param::Set(Param::syncadv, FP_FROMINT(ui->SyncAdv->text().toInt()));
-}
-
-void MainWindow::on_LqMinusLd_editingFinished()
-{
-    Param::Set(Param::lqminusld, FP_FROMFLT(ui->LqMinusLd->text().toFloat()));
-    PwmGeneration::SetTorquePercent(ui->torqueDemand->text().toFloat()); //make sure MTPA is recalculated
-}
-
 void MainWindow::on_SyncDelay_editingFinished()
 {
     m_syncdelay = ui->SyncDelay->text().toDouble()/1000000; //entered in uS
     motor->setSyncDelay(m_syncdelay);
-}
-
-void MainWindow::on_FreqMax_editingFinished()
-{
-    Param::Set(Param::fmax, FP_FROMFLT(ui->FreqMax->text().toFloat()));
 }
 
 void MainWindow::on_SamplingPoint_editingFinished()
@@ -810,11 +807,6 @@ void MainWindow::on_pbTransient_clicked()
         ui->torqueDemand->setText(torque);
         runFor(int(m_runTime/m_timestep));
     }
-}
-
-void MainWindow::on_SyncOfs_editingFinished()
-{
-    Param::Set(Param::syncofs, FP_FROMINT(ui->SyncOfs->text().toInt()));
 }
 
 void MainWindow::on_pbAccelCoast_clicked()
@@ -928,21 +920,6 @@ void MainWindow::on_runTime_editingFinished()
         m_runTime = 60;
 }
 
-void MainWindow::on_VLimMargin_editingFinished()
-{
-    Param::Set(Param::vlimmargin, FP_FROMINT(ui->VLimMargin->text().toInt()));
-}
-
-void MainWindow::on_VLimFlt_editingFinished()
-{
-    Param::Set(Param::vlimflt, FP_FROMINT(ui->VLimFlt->text().toInt()));
-}
-
-void MainWindow::on_FWCurrMax_editingFinished()
-{
-    Param::Set(Param::fwcurmax, FP_FROMINT(ui->FWCurrMax->text().toInt()));
-}
-
 void MainWindow::on_rb_OP_Amps_toggled(bool checked)
 {
     idigGraph->clearData(); //need to restart as data arrays not right for new mode
@@ -964,4 +941,156 @@ void MainWindow::on_testMode_editingFinished()
     #ifdef STM32F4
     Param::Set(Param::testmode, FP_FROMINT(ui->testMode->text().toInt()));
 #endif
+}
+
+void MainWindow::on_direction_editingFinished()
+{
+    Param::Set(Param::dir, FP_FROMINT(ui->direction->text().toInt()));
+}
+
+void MainWindow::on_opMode_editingFinished()
+{
+    PwmGeneration::SetOpmode(ui->opMode->text().toInt());
+}
+
+void MainWindow::on_pbLoadMot_clicked()
+{
+    bool haveLd=false, haveLq=false, haveRs=false, haveFL=false;
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open json"), "", tr("JSON Files (*.json)"));
+    QFile inFile(fileName);
+    if(inFile.open(QIODevice::ReadOnly))
+    {
+        QByteArray data = inFile.readAll();
+        QJsonDocument jsonResponse = QJsonDocument::fromJson(data);
+        QJsonObject jsonObject = jsonResponse.object();
+        foreach(const QString& key, jsonObject.keys())
+        {
+            if(key == "Lq")
+            {
+                haveLq = true;
+                QString value = QString::number(jsonObject[key].toDouble());
+                ui->Lq->setText(value);
+                on_Lq_editingFinished();
+            }
+            if(key == "Ld")
+            {
+                haveLd = true;
+                QString value = QString::number(jsonObject[key].toDouble());
+                ui->Ld->setText(value);
+                on_Ld_editingFinished();
+            }
+            if(key == "Rs")
+            {
+                haveRs = true;
+                QString value = QString::number(jsonObject[key].toDouble());
+                ui->Rs->setText(value);
+                on_Rs_editingFinished();
+            }
+            if(key == "FluxLinkage")
+            {
+                haveFL = true;
+                QString value = QString::number(jsonObject[key].toDouble());
+                ui->FluxLinkage->setText(value);
+                on_FluxLinkage_editingFinished();
+            }
+        }
+        if(!haveLd)
+            QMessageBox::warning(this, tr("IPMMotorSim"), tr("No Ld value found"));
+        if(!haveLq)
+            QMessageBox::warning(this, tr("IPMMotorSim"), tr("No Lq value found"));
+        if(!haveRs)
+            QMessageBox::warning(this, tr("IPMMotorSim"), tr("No Rs value found"));
+        if(!haveFL)
+            QMessageBox::warning(this, tr("IPMMotorSim"), tr("No FluxLinkage value found"));
+    }
+    else
+        QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not open file"));
+}
+
+
+void MainWindow::on_pbSaveMot_clicked()
+{
+    QString line;
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Open json"), "", tr("Json Files (*.json)"));
+    QFile outFile(fileName);
+    if(outFile.open(QIODevice::WriteOnly))
+    {
+        outFile.write("{\n");
+        line = "  \"Lq\": " + ui->Lq->text() + ",\n";
+        outFile.write(line.toUtf8());
+        line = "  \"Ld\": " + ui->Ld->text() + ",\n";
+        outFile.write(line.toUtf8());
+        line = "  \"Rs\": " + ui->Rs->text() + ",\n";
+        outFile.write(line.toUtf8());
+        line = "  \"FluxLinkage\": " + ui->FluxLinkage->text() + "\n}";
+        outFile.write(line.toUtf8());
+    }
+    else
+        QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not create file"));
+}
+
+void MainWindow::on_pbLoadInv_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open json"), "", tr("JSON Files (*.json)"));
+    QFile inFile(fileName);
+    if(inFile.open(QIODevice::ReadOnly))
+    {
+        QByteArray data = inFile.readAll();
+        QJsonDocument jsonResponse = QJsonDocument::fromJson(data);
+        QJsonObject jsonObject = jsonResponse.object();
+        foreach(const QString& key, jsonObject.keys())
+        {
+            bool haveMatch = false;
+            for(int r = 0; r < params.rowCount(); ++r)
+            {
+                QModelIndex parent = params.index(r, 0);
+                int rows = params.rowCount(parent);
+                for(int r = 0; r < rows; ++r)
+                {
+                    QVariant name = params.index(r,0,parent).data();
+                    if(name.toString() == key)
+                    {
+                        haveMatch=true;
+                        QModelIndex target_index = params.index(r,1,parent);
+                        QVariant newVal = jsonObject[key].toVariant();
+                        params.setData(target_index, newVal);
+                    }
+                }
+            }
+            if(!haveMatch)
+            {
+                QString message = "No match found for " + key;
+                QMessageBox::warning(this, tr("IPMMotorSim"), message);
+            }
+        }
+    }
+    else
+        QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not open file"));
+}
+
+void MainWindow::on_pbSaveInv_clicked()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Open json"), "", tr("Json Files (*.json)"));
+    QFile outFile(fileName);
+    QString comma = "\n";
+    if(outFile.open(QIODevice::WriteOnly))
+    {
+        outFile.write("{");
+        for(int r = 0; r < params.rowCount(); ++r)
+        {
+            QModelIndex parent = params.index(r, 0);
+            int rows = params.rowCount(parent);
+            for(int r = 0; r < rows; ++r)
+            {
+                QVariant name = params.index(r,0,parent).data();
+                QVariant value = params.index(r,1,parent).data();
+                QString line = comma + "  \"" + name.toString() + "\": " + value.toString();
+                outFile.write(line.toUtf8());
+                comma = ",\n";
+            }
+        }
+        outFile.write("\n}");
+    }
+    else
+        QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not create file"));
 }

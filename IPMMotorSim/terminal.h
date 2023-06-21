@@ -15,6 +15,7 @@ public:
    bool SendCurrentBuffer(uint32_t len, bool wait);
    static Terminal* defaultTerminal;
    void EnableLogging(bool enable);
+   void SetNodeId(uint8_t id);
 
 private:
    bool loggingEnabled = false;

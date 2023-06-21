@@ -24,6 +24,11 @@ void Terminal::EnableLogging(bool enable)
    loggingEnabled = enable;
 }
 
+void Terminal::SetNodeId(uint8_t id)
+{
+    (void)id;
+}
+
 static QFile logFile("logfile.bin");
 
 #if __has_include("binarylogging.h")

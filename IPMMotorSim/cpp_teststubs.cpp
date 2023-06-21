@@ -24,6 +24,8 @@
 #include "anain.h"
 #include "digio.h"
 #include "foc.h"
+#include "throttle.h"
+#include "inc_encoder.h"
 
 
 #define TWO_PI            65536
@@ -55,7 +57,6 @@ static int32_t distance = 0;
 static int32_t turnsSinceLastSample = 0;
 #ifdef STM32F1
 static u32fp lastFrequency = 0;
-uint16_t PwmGeneration::slipIncr;
 #else
 static float lastFrequency = 0.0f;
 #endif
@@ -63,6 +64,35 @@ static int32_t detectedDirection = 0;
 
 static uint16_t lastAngle = 0;
 static int poleCounter = 0;
+
+//Throttle variables
+int Throttle::potmin[2];
+int Throttle::potmax[2];
+float Throttle::brknom;
+float Throttle::brknompedal;
+float Throttle::brkmax;
+float Throttle::brkcruise;
+int Throttle::idleSpeed;
+int Throttle::cruiseSpeed;
+float Throttle::speedkp;
+float Throttle::holdkp;
+int Throttle::speedflt;
+int Throttle::speedFiltered;
+float Throttle::idleThrotLim;
+float Throttle::potnomFiltered;
+float Throttle::throtmax;
+float Throttle::throtmin;
+float Throttle::regenRamp;
+float Throttle::throttleRamp;
+float Throttle::throttleRamped;
+int Throttle::bmslimhigh;
+int Throttle::bmslimlow;
+float Throttle::udcmin;
+float Throttle::udcmax;
+float Throttle::idcmin;
+float Throttle::idcmax;
+float Throttle::idckp;
+float Throttle::fmax;
 
 void testStubsClearEncoder(void)
 {
@@ -86,6 +116,12 @@ bool Encoder::SeenNorthSignal()
    return seenNorthSignal;
 }
 #endif
+
+void Encoder::SwapSinCos(bool swap) {(void)swap;}
+void Encoder::SetMode(enum mode encMode) {(void)encMode;}
+void Encoder::SetImpulsesPerTurn(uint16_t imp) {(void)imp;}
+void Encoder::SetSinCosOffset(uint16_t offset) {(void)offset;}
+
 
 #ifdef STM32F1
 void Encoder::UpdateRotorAngle(int dir)
@@ -223,38 +259,38 @@ void timer_disable_break_main_output(int i)
     (void)i;
 }
 
-/** This function is called when the user changes a parameter */
-void Param::Change(Param::PARAM_NUM paramNum)
-{
-   switch (paramNum)
-   {
-      case Param::canspeed:
-         break;
-      case Param::throtmax:
-      case Param::throtmin:
-      case Param::idcmin:
-      case Param::idcmax:
-      case Param::offthrotregen:
-         break;
-      case Param::nodeid:
-         break;
-      default:
-         #ifdef STM32F1
-            PwmGeneration::SetCurrentLimitThreshold(Param::Get(Param::ocurlim));
-         #endif
-         PwmGeneration::SetPolePairRatio(Param::GetInt(Param::polepairs) / Param::GetInt(Param::respolepairs));
+///** This function is called when the user changes a parameter */
+//void Param::Change(Param::PARAM_NUM paramNum)
+//{
+//   switch (paramNum)
+//   {
+//      case Param::canspeed:
+//         break;
+//      case Param::throtmax:
+//      case Param::throtmin:
+//      case Param::idcmin:
+//      case Param::idcmax:
+//      case Param::offthrotregen:
+//         break;
+//      case Param::nodeid:
+//         break;
+//      default:
+//         #ifdef STM32F1
+//            PwmGeneration::SetCurrentLimitThreshold(Param::Get(Param::ocurlim));
+//         #endif
+//         PwmGeneration::SetPolePairRatio(Param::GetInt(Param::polepairs) / Param::GetInt(Param::respolepairs));
 
-#if CONTROL == CTRL_FOC
-#ifdef STM32F1
-         PwmGeneration::SetControllerGains(Param::GetInt(Param::curkp), Param::GetInt(Param::curki));
-#else
-         PwmGeneration::SetControllerGains(Param::GetFloat(Param::curkp), Param::GetFloat(Param::curki));
-#endif
-         FOC::SetMotorParameters(Param::GetFloat(Param::lqminusld)/1000, Param::GetFloat(Param::fluxlinkage)/1000);
-#endif // CONTROL
-         break;
-   }
-}
+//#if CONTROL == CTRL_FOC
+//#ifdef STM32F1
+//         PwmGeneration::SetControllerGains(Param::GetInt(Param::curkp), Param::GetInt(Param::curki));
+//#else
+//         PwmGeneration::SetControllerGains(Param::GetFloat(Param::curkp), Param::GetFloat(Param::curki));
+//#endif
+//         FOC::SetMotorParameters(Param::GetFloat(Param::lqminusld)/1000, Param::GetFloat(Param::fluxlinkage)/1000);
+//#endif // CONTROL
+//         break;
+//   }
+//}
 
 #ifdef STM32F1
 void Encoder::SetPwmFrequency(uint32_t frq) {(void)frq;}

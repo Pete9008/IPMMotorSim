@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>680</width>
-    <height>692</height>
+    <height>616</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -26,7 +26,7 @@
       <x>10</x>
       <y>10</y>
       <width>181</width>
-      <height>481</height>
+      <height>541</height>
      </rect>
     </property>
     <property name="title">
@@ -38,7 +38,7 @@
        <x>0</x>
        <y>20</y>
        <width>181</width>
-       <height>491</height>
+       <height>461</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout">
@@ -297,6 +297,32 @@
       </item>
      </layout>
     </widget>
+    <widget class="QPushButton" name="pbLoadMot">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>510</y>
+       <width>51</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pbSaveMot">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>510</y>
+       <width>51</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Save</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
@@ -304,7 +330,7 @@
       <x>410</x>
       <y>10</y>
       <width>171</width>
-      <height>351</height>
+      <height>271</height>
      </rect>
     </property>
     <property name="title">
@@ -316,7 +342,7 @@
        <x>0</x>
        <y>20</y>
        <width>171</width>
-       <height>331</height>
+       <height>251</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
@@ -324,6 +350,13 @@
        <widget class="QPushButton" name="pbRunFor">
         <property name="text">
          <string>Run For (s)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="runTime">
+        <property name="text">
+         <string>5</string>
         </property>
        </widget>
       </item>
@@ -362,26 +395,6 @@
         </property>
        </widget>
       </item>
-      <item row="8" column="0">
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>80</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="9" column="0">
-       <widget class="QPushButton" name="pbRestart">
-        <property name="text">
-         <string>Restart</string>
-        </property>
-       </widget>
-      </item>
       <item row="6" column="0">
        <widget class="QPushButton" name="pbTransient">
         <property name="text">
@@ -396,10 +409,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="runTime">
+      <item row="7" column="1">
+       <widget class="QPushButton" name="pbRestart">
         <property name="text">
-         <string>5</string>
+         <string>Restart</string>
         </property>
        </widget>
       </item>
@@ -412,339 +425,141 @@
       <x>200</x>
       <y>10</y>
       <width>201</width>
-      <height>591</height>
+      <height>541</height>
      </rect>
     </property>
     <property name="title">
      <string>OpenInverter Parameters</string>
     </property>
-    <widget class="QWidget" name="formLayoutWidget_4">
+    <widget class="QLabel" name="labelTorqueDemand">
      <property name="geometry">
       <rect>
        <x>0</x>
        <y>20</y>
-       <width>201</width>
-       <height>568</height>
+       <width>121</width>
+       <height>25</height>
       </rect>
      </property>
-     <layout class="QFormLayout" name="formLayout_4">
-      <item row="0" column="0">
-       <widget class="QLabel" name="labelTorqueDemand">
-        <property name="text">
-         <string>Torque Demand (%)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="torqueDemand">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>100</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="labelThrottlCurrent">
-        <property name="text">
-         <string>Throttle Current (A/%)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="throttleCurrent">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>3</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="labelOpMode">
-        <property name="text">
-         <string>Mode (1=Run,2=Man)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="opMode">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="labelTestMode">
-        <property name="text">
-         <string>Test (1=Res,2=Phs,</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="testMode">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="labelDir">
-        <property name="text">
-         <string>Direction (-1=R,0=N,1=F)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QLineEdit" name="direction">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="labelIqManual">
-        <property name="text">
-         <string>Iq Manual</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="IqManual">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="labelIdManual">
-        <property name="text">
-         <string>Id Manual</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="QLineEdit" name="IdManual">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>80</width>
-          <height>10</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="9" column="0">
-       <widget class="QLabel" name="labelPoles">
-        <property name="text">
-         <string>Motor Poles</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="1">
-       <widget class="QLineEdit" name="Poles">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>4</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="0">
-       <widget class="QLabel" name="labelCurKp">
-        <property name="text">
-         <string>Current Kp</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="1">
-       <widget class="QLineEdit" name="CurrentKp">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>2000</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="0">
-       <widget class="QLabel" name="labelCurKi">
-        <property name="text">
-         <string>Current Ki</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="1">
-       <widget class="QLineEdit" name="CurrentKi">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>800</string>
-        </property>
-       </widget>
-      </item>
-      <item row="12" column="0">
-       <widget class="QLabel" name="labelVLimMargin">
-        <property name="text">
-         <string>VLim Margin</string>
-        </property>
-       </widget>
-      </item>
-      <item row="12" column="1">
-       <widget class="QLineEdit" name="VLimMargin">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>2500</string>
-        </property>
-       </widget>
-      </item>
-      <item row="13" column="0">
-       <widget class="QLabel" name="labelVLimFlt">
-        <property name="text">
-         <string>VLim Flt</string>
-        </property>
-       </widget>
-      </item>
-      <item row="13" column="1">
-       <widget class="QLineEdit" name="VLimFlt">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>10</string>
-        </property>
-       </widget>
-      </item>
-      <item row="14" column="0">
-       <widget class="QLabel" name="labelLqMinusLd">
-        <property name="text">
-         <string>Lq - Ld (mH)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="14" column="1">
-       <widget class="QLineEdit" name="LqMinusLd">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="15" column="0">
-       <widget class="QLabel" name="labelSyncAdv">
-        <property name="text">
-         <string>SyncAdv (dig/Hz)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="15" column="1">
-       <widget class="QLineEdit" name="SyncAdv">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="16" column="0">
-       <widget class="QLabel" name="labelSyncOfs">
-        <property name="text">
-         <string>SyncOfs</string>
-        </property>
-       </widget>
-      </item>
-      <item row="16" column="1">
-       <widget class="QLineEdit" name="SyncOfs">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="17" column="0">
-       <widget class="QLabel" name="labelFWCurrMax">
-        <property name="text">
-         <string>FW Current Max (A)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="17" column="1">
-       <widget class="QLineEdit" name="FWCurrMax">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>-100</string>
-        </property>
-       </widget>
-      </item>
-      <item row="18" column="0">
-       <widget class="QLabel" name="labelFMax">
-        <property name="text">
-         <string>FMax (Hz)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="18" column="1">
-       <widget class="QLineEdit" name="FreqMax">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>166</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="labelTestMode_2">
-        <property name="text">
-         <string>         3=FSp,4=RSp)</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <property name="text">
+      <string>Torque Demand (%)</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="torqueDemand">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>156</x>
+       <y>20</y>
+       <width>41</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>100</string>
+     </property>
+    </widget>
+    <widget class="QTreeView" name="treeView">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>120</y>
+       <width>201</width>
+       <height>381</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelDir">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>80</y>
+       <width>141</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Direction (-1=R,0=N,1=F)</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="direction">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>156</x>
+       <y>80</y>
+       <width>41</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>1</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="opMode">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>156</x>
+       <y>50</y>
+       <width>41</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>1</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelOpMode">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>50</y>
+       <width>131</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Mode (1=Run,2=Man)</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pbLoadInv">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>510</y>
+       <width>51</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pbSaveInv">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>510</y>
+       <width>51</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Save</string>
+     </property>
     </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_3">
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>370</y>
+      <y>290</y>
       <width>241</width>
       <height>261</height>
      </rect>
