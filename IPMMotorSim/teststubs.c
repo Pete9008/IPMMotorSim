@@ -20,8 +20,14 @@
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/adc.h>
 extern volatile bool disablePWM;
 volatile bool disablePWM = true;
+
+#ifdef STM32F4
+volatile double g_il1_input = 0;
+volatile double g_il2_input = 0;
+#endif
 
 void timer_enable_break_main_output(uint32_t timer_peripheral) {disablePWM = false;(void)timer_peripheral;}
 void timer_disable_break_main_output(uint32_t timer_peripheral) {disablePWM = true;(void)timer_peripheral;}
@@ -54,9 +60,34 @@ void timer_generate_event(uint32_t timer_peripheral, uint32_t event) {(void)time
 void timer_enable_counter(uint32_t timer_peripheral) {(void)timer_peripheral;}
 void timer_disable_counter(uint32_t timer_peripheral) {(void)timer_peripheral;}
 void timer_set_clock_division(uint32_t timer_peripheral, uint32_t clock_div) {(void)timer_peripheral;(void)clock_div;}
+bool timer_get_flag(uint32_t timer_peripheral, uint32_t flag) {(void)timer_peripheral;(void)flag;return 0;}
+
+bool adc_get_flag(uint32_t peripheral, uint32_t flag) {(void)peripheral;(void)flag;return 0;}
+void adc_clear_flag(uint32_t peripheral, uint32_t flag) {(void)peripheral;(void)flag;}
+
+#ifdef STM32F4
+int32_t adc_read_injected(uint32_t adc, uint8_t reg)
+{
+    (void)reg;
+    double iVal = 0;
+    if(adc == ADC2)
+        iVal = g_il1_input;
+    else if(adc == ADC3)
+        iVal = g_il2_input;
+
+    iVal = iVal + 2048;
+    if(iVal > 4096)
+        return 4096;
+    else if (iVal < 0)
+        return 0;
+    else
+        return (int32_t)iVal;
+}
+#endif
 
 uint16_t gpio_get(uint32_t gpioport, uint16_t gpios) {(void)gpioport;(void)gpios;return 0;}
 void gpio_set(uint32_t gpioport, uint16_t gpios) {(void)gpioport;(void)gpios;}
+void gpio_clear(uint32_t gpioport, uint16_t gpios) {(void)gpioport;(void)gpios;}
 void gpio_set_mode(uint32_t gpioport, uint8_t mode, uint8_t cnf, uint16_t gpios) {(void)gpioport;(void)mode;(void)cnf;(void)gpios;}
 
 void rcc_periph_reset_pulse(enum rcc_periph_rst rst) {(void)rst;}

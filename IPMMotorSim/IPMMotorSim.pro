@@ -20,8 +20,19 @@ DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += CTRL_FOC=1
 DEFINES += CTRL_SINE=0
 DEFINES += CONTROL=1
+DEFINES += QLIMIT_FREQUENCY=-1
+DEFINES += SIMULATOR
 
+#DEFINES += STM32F4
+#CONFIG += STM32F4
 DEFINES += STM32F1
+CONFIG += STM32F1
+
+DEFINES += SETTINGS_VER='\\"IPMMotorSimVtest\\"'
+
+STM32F4 {FW_PATH = "stm32f405-foc"}
+
+STM32F1 {FW_PATH = "stm32-sine"}
 
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -30,9 +41,9 @@ DEFINES += STM32F1
 
 CONFIG += c++11
 
-INCLUDEPATH += $$PWD/stm32-sine/include
-INCLUDEPATH += $$PWD/stm32-sine/libopencm3/include
-INCLUDEPATH += $$PWD/stm32-sine/libopeninv/include
+INCLUDEPATH += $$PWD/$$FW_PATH/include
+INCLUDEPATH += $$PWD/$$FW_PATH/libopencm3/include
+INCLUDEPATH += $$PWD/$$FW_PATH/libopeninv/include
 
 SOURCES += \
         main.cpp \
@@ -41,18 +52,19 @@ SOURCES += \
     chartview.cpp \
     datagraph.cpp \
     motormodel.cpp \
-    stm32-sine/libopeninv/src/params.cpp \
-    stm32-sine/libopeninv/src/picontroller.cpp \
-    stm32-sine/libopeninv/src/sine_core.cpp \
-    stm32-sine/src/pwmgeneration-foc.cpp \
-    stm32-sine/libopeninv/src/my_string.c \
-    stm32-sine/libopeninv/src/errormessage.cpp \
-    stm32-sine/libopeninv/src/foc.cpp \
+    $$FW_PATH/libopeninv/src/params.cpp \
+    $$FW_PATH/libopeninv/src/picontroller.cpp \
+    $$FW_PATH/libopeninv/src/sine_core.cpp \
+    $$FW_PATH/src/pwmgeneration.cpp \
+    $$FW_PATH/libopeninv/src/my_string.c \
+    $$FW_PATH/libopeninv/src/errormessage.cpp \
+    $$FW_PATH/libopeninv/src/foc.cpp \
     teststubs.c \
     cpp_teststubs.cpp \
-    stm32-sine/src/pwmgeneration.cpp \
     idiqgraph.cpp \
     terminal_stubs.cpp
+
+STM32F1 {SOURCES += $$FW_PATH/src/pwmgeneration-foc.cpp}
 
 HEADERS += \
         mainwindow.h \
@@ -60,9 +72,10 @@ HEADERS += \
     chartview.h \
     datagraph.h \
     motormodel.h \
-    stm32-sine/include/pwmgeneration.h \
+    $$FW_PATH/include/pwmgeneration.h \
     teststubs.h \
-    idiqgraph.h
+    idiqgraph.h \
+    param_prj.h
 
 FORMS += \
         mainwindow.ui

@@ -32,5 +32,9 @@
 *.app
 
 IPMMotorSim/stm32-sine/
+IPMMotorSim/stm32f405-foc/
+*.pro.user
+*.pro.user.*
+*build-*
 
 

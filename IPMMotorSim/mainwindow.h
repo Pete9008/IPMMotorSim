@@ -171,6 +171,8 @@ private slots:
 
     void on_rb_OP_Amps_toggled(bool checked);
 
+    void on_testMode_editingFinished();
+
 private:
     Ui::MainWindow *ui;
     void closeEvent(QCloseEvent *bar);

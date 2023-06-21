@@ -94,7 +94,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QSettings settings("OpenInverter", "IPMMotorSim");
+    QSettings settings("OpenInverter", SETTINGS_VER);
     restoreGeometry(settings.value("mainwin/geometry").toByteArray());
     restoreState(settings.value("mainwin/windowState").toByteArray());
 
@@ -133,7 +133,7 @@ MainWindow::MainWindow(QWidget *parent) :
     Param::SetInt(Param::pinswap,0); //shouldn't be a problem but may be in the future
     Param::SetInt(Param::respolepairs,Param::GetInt(Param::polepairs)); //force resolver pole pairs to match motor
 
-    ui->LqMinusLd->setText(QString::number(Param::GetFloat(Param::lqminusld), 'f', 1));
+    ui->LqMinusLd->setText(QString::number(Param::GetFloat(Param::lqminusld), 'f', 2));
     ui->FluxLinkage->setText(QString::number(Param::GetInt(Param::fluxlinkage)));
     ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
     ui->FreqMax->setText(QString::number(Param::GetFloat(Param::fmax), 'f', 1));
@@ -147,6 +147,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->IqManual->setText(QString::number(Param::GetFloat(Param::manualiq), 'f', 1));
     ui->SyncAdv->setText(QString::number(Param::GetInt(Param::syncadv)));
     ui->throttleCurrent->setText(QString::number(Param::GetFloat(Param::throtcur), 'f', 1));
+#ifdef STM32F4
+    ui->testMode->setText(QString::number(Param::GetInt(Param::testmode)));
+#endif
 
     m_wheelSize = ui->wheelSize->text().toDouble();
     m_vehicleWeight = ui->vehicleWeight->text().toDouble();
@@ -290,6 +293,7 @@ MainWindow::MainWindow(QWidget *parent) :
     Param::Change(Param::nodeid);
 
     PwmGeneration::SetOpmode(0);
+    PwmGeneration::SetCurrentOffset(2048, 2048);
     PwmGeneration::SetOpmode(ui->opMode->text().toInt());
     Param::SetInt(Param::dir, ui->direction->text().toInt());
 
@@ -312,7 +316,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    QSettings settings("OpenInverter", "IPMMotorSim");
+    QSettings settings("OpenInverter", SETTINGS_VER);
     settings.setValue("mainwin/geometry", saveGeometry());
     settings.setValue("mainwin/windowState", saveState());
 
@@ -381,7 +385,9 @@ void MainWindow::runFor(int num_steps)
         if((uint32_t)(m_time*100) != m_old_time)
         {
             m_old_time = (uint32_t)(m_time*100);
+#ifdef STM32F1
             Encoder::UpdateRotorFrequency(100);
+#endif
 
             int requestedTorque = ui->torqueDemand->text().toInt() * 100;
             if(ui->ThrotRamps->isChecked())
@@ -427,7 +433,14 @@ void MainWindow::runFor(int num_steps)
             g_il2_input += QRandomGenerator::global()->bounded(noise) - (noise/2);
         }
 
+#ifdef STM32F1
         PwmGeneration::Run();
+#else
+        if(MOD_RUN == PwmGeneration::GetOpmode())
+           PwmGeneration::Run();
+        else if(MOD_MANUAL == PwmGeneration::GetOpmode())
+           PwmGeneration::TestModeRun();
+#endif
 
         if(disablePWM) //needed to allow OpeinInverter initialisation to complete
         {
@@ -437,9 +450,15 @@ void MainWindow::runFor(int num_steps)
         }
         else
         {
+#ifdef STM32F1
             Va = (m_Vdc/65536) * (FOC::DutyCycles[0]-32768);
             Vb = (m_Vdc/65536) * (FOC::DutyCycles[1]-32768);
             Vc = (m_Vdc/65536) * (FOC::DutyCycles[2]-32768);
+#else
+            Va = (m_Vdc/2.0) * (FOC::DutyCycles[0]/32768);
+            Vb = (m_Vdc/2.0) * (FOC::DutyCycles[1]/32768);
+            Vc = (m_Vdc/2.0) * (FOC::DutyCycles[2]/32768);
+#endif
         }
 
         //add voltages to plot here so that we see the SVM waveforms
@@ -463,7 +482,7 @@ void MainWindow::runFor(int num_steps)
             motor->Step(Va,Vb,Vc);
         m_oldVa = Va;
         m_oldVb = Vb;
-        m_oldVb = Vb;
+        m_oldVc = Vc;
 
         //motor->Step(0,0,0);
         if(ui->cb_PhaseCurrs->isChecked())
@@ -589,6 +608,9 @@ void MainWindow::runFor(int num_steps)
     if(ui->cb_MotVolt->isChecked()) voltageGraph->updateGraph();
     if(ui->cb_OpPoint->isChecked()) idigGraph->updateGraph(ui->rb_OP_Amps->isChecked());
     if(ui->cb_PowTorqTime->isChecked()) powerGraph->updateGraph();
+#ifdef STM32F4
+    ui->opMode->setText(QString::number(PwmGeneration::GetOpmode())); //update UI in case inverter tripped
+#endif
 }
 
 void MainWindow::on_vehicleWeight_editingFinished()
@@ -652,6 +674,7 @@ void MainWindow::on_FluxLinkage_editingFinished()
 void MainWindow::on_LoopFreq_editingFinished()
 {
     m_timestep = 1.0 / ui->LoopFreq->text().toDouble();
+    motor->setTimestep(m_timestep);
 }
 
 void MainWindow::on_pbRunFor_clicked()
@@ -935,3 +958,10 @@ void MainWindow::on_rb_OP_Amps_toggled(bool checked)
     }
 }
 
+
+void MainWindow::on_testMode_editingFinished()
+{
+    #ifdef STM32F4
+    Param::Set(Param::testmode, FP_FROMINT(ui->testMode->text().toInt()));
+#endif
+}

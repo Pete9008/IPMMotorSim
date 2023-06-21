@@ -7,61 +7,64 @@
 
 Terminal* Terminal::defaultTerminal;
 
-//Terminal t;
-//static Terminal* terminal = &t;
+Terminal t;
+static Terminal* terminal = &t;
 
 Terminal::Terminal()
 {
-   binLoggingEnabled = false;
+   loggingEnabled = false;
+   firstSend = true;
+   curBuf = 0;
+   curIdx = 0;
    defaultTerminal = this;
 }
 
-//todo - pull from SOMETHING_LIST definition in pwmgeneration
-const char binHeader[] =  "{\"01\":{\"name\":\"count\",\"size\":8,\"scale\":1,\"signed\":0},\
-\"02\":{\"name\":\"angle\",\"size\":14,\"scale\":4,\"signed\":0},\
-\"03\":{\"name\":\"idc\",\"size\":14,\"scale\":0.25,\"signed\":1},\
-\"04\":{\"name\":\"i1\",\"size\":14,\"scale\":0.25,\"signed\":1},\
-\"05\":{\"name\":\"i2\",\"size\":14,\"scale\":0.25,\"signed\":1},\
-\"06\":{\"name\":\"pwm1\",\"size\":14,\"scale\":1,\"signed\":0},\
-\"07\":{\"name\":\"opmode\",\"size\":2,\"scale\":1,\"signed\":0},\
-\"08\":{\"name\":\"pwm2\",\"size\":14,\"scale\":1,\"signed\":0},\
-\"09\":{\"name\":\"desat\",\"size\":2,\"scale\":1,\"signed\":0},\
-\"10\":{\"name\":\"pwm3\",\"size\":14,\"scale\":1,\"signed\":0},\
-\"11\":{\"name\":\"iqref\",\"size\":14,\"scale\":0.25,\"signed\":1},\
-\"12\":{\"name\":\"idref\",\"size\":14,\"scale\":0.25,\"signed\":1},\
-\"13\":{\"name\":\"ifw\",\"size\":14,\"scale\":0.25,\"signed\":1},\
-\"14\":{\"name\":\"uq\",\"size\":16,\"scale\":2,\"signed\":1},\
-\"15\":{\"name\":\"ud\",\"size\":16,\"scale\":2,\"signed\":1},\
-\"16\":{\"name\":\"csum\",\"size\":8,\"scale\":1,\"signed\":0}}";
-
-void Terminal::BinaryLogging(char *arg)
+void Terminal::EnableLogging(bool enable)
 {
-   if(arg[0] == '1')
-      binLoggingEnabled = true;
-   else
-      binLoggingEnabled = false;
-}
-
-bool Terminal::BinLoggingEnabled()
-{
-   return binLoggingEnabled;
+   loggingEnabled = enable;
 }
 
 static QFile logFile("logfile.bin");
 
-void Terminal::SendBinary(uint8_t* data, uint32_t len)
+#if __has_include("binarylogging.h")
+bool Terminal::SendCurrentBuffer(uint32_t len, bool wait)
 {
+    (void)wait;
     if(!logFile.isOpen())
     {
         logFile.open(QFile::WriteOnly);
         TerminalCommands::PrintParamsJson(this,nullptr);
-        logFile.write(binHeader, sizeof(binHeader));
+        logFile.write(BINLOG_JSON, sizeof(BINLOG_JSON));
     }
 
     if(logFile.isOpen())
     {
-        logFile.write(reinterpret_cast<char *>(data), len);
+        logFile.write(outBuf[curBuf], len);
     }
+}
+
+LogStruct* Terminal::GetWriteBuffer(uint32_t length)
+{
+   LogStruct* retVal = nullptr;
+
+   if(loggingEnabled)
+   {
+      if(length < (bufSize - curIdx)) //will it fit - note may leave buffer with 0 bytes left
+      {
+         retVal = (LogStruct*)(&outBuf[curBuf][curIdx]);
+         curIdx += length;
+      }
+      else
+      { //won't fit so start new DMA if possible and switch to start of other buffer
+         if(SendCurrentBuffer(curIdx, false))
+         {
+            retVal = (LogStruct*)(&outBuf[curBuf][0]);
+            curIdx = length;
+         }
+      }
+   }
+   //otherwise no buffer is available so return default null
+   return retVal;
 }
 
 void TerminalCommands::PrintParamsJson(Terminal* term, char *arg)
@@ -75,6 +78,7 @@ void TerminalCommands::PrintParamsJson(Terminal* term, char *arg)
    const Param::Attributes *pAtr;
    char comma = ' ';
    bool printHidden = false;
+   uint32_t spotIdx = 0;
 
    out << "{";
    for (uint32_t idx = 0; idx < Param::PARAM_LAST; idx++)
@@ -100,7 +104,8 @@ void TerminalCommands::PrintParamsJson(Terminal* term, char *arg)
          else
          {
             //fprintf(term, "\"isparam\":false}");
-             out << "\"isparam\":false}";
+             str.asprintf("\"isparam\":false,\"si\":%d}", spotIdx++);
+             out << str;
          }
          comma = ',';
       }
@@ -108,3 +113,4 @@ void TerminalCommands::PrintParamsJson(Terminal* term, char *arg)
    //fprintf(term, "\r\n}\r\n");
    out << "\r\n}\r\n";
 }
+#endif
