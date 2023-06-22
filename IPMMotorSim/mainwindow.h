@@ -41,6 +41,8 @@ private:
     void calcFluxLinkage(void);
     void updateParams(void);
     void overrideParams(void);
+    bool saveInvParam(QString fileName);
+    bool loadInvParam(QString fileName);
 
     DataGraph *motorGraph;
     DataGraph *simulationGraph;

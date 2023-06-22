@@ -100,7 +100,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    QSettings settings("OpenInverter", SETTINGS_VER);
+    QSettings settings(SETTINGS_NAME, SETTINGS_VER);
     restoreGeometry(settings.value("mainwin/geometry").toByteArray());
     restoreState(settings.value("mainwin/windowState").toByteArray());
 
@@ -121,7 +121,10 @@ MainWindow::MainWindow(QWidget *parent) :
     if(settings.contains(ui->runTime->objectName())) ui->runTime->setText(settings.value(ui->runTime->objectName(),QString()).toString());
     if(settings.contains(ui->RoadGradient->objectName())) ui->RoadGradient->setText(settings.value(ui->RoadGradient->objectName(),QString()).toString());
     if(settings.contains(ui->ThrotRamps->objectName())) ui->ThrotRamps->setChecked(settings.value(ui->ThrotRamps->objectName()).toBool());
-    if(settings.contains(ui->cb_Efficiency->objectName())) ui->cb_Efficiency->setChecked(settings.value(ui->cb_Efficiency->objectName()).toBool());
+    if(settings.contains(ui->cb_Efficiency->objectName())) ui->cb_Efficiency->setChecked(settings.value(ui->cb_Efficiency->objectName()).toBool());    
+    if(settings.contains(ui->torqueDemand->objectName())) ui->torqueDemand->setText(settings.value(ui->torqueDemand->objectName(),QString()).toString());
+    if(settings.contains(ui->opMode->objectName())) ui->opMode->setText(settings.value(ui->opMode->objectName(),QString()).toString());
+    if(settings.contains(ui->direction->objectName())) ui->direction->setText(settings.value(ui->direction->objectName(),QString()).toString());
 
     motorGraph = new DataGraph("motor", this);
     simulationGraph = new DataGraph("sim", this);
@@ -173,8 +176,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->treeView->setModel( &params );
     ui->treeView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    //ui->treeView->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    //ui->treeView->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+
+    loadInvParam(".paramPersist.json");
 
     m_wheelSize = ui->wheelSize->text().toDouble();
     m_vehicleWeight = ui->vehicleWeight->text().toDouble();
@@ -340,7 +343,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    QSettings settings("OpenInverter", SETTINGS_VER);
+    QSettings settings(SETTINGS_NAME, SETTINGS_VER);
     settings.setValue("mainwin/geometry", saveGeometry());
     settings.setValue("mainwin/windowState", saveState());
 
@@ -360,7 +363,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue(ui->NoiseAmp->objectName(), ui->NoiseAmp->text());
     settings.setValue(ui->runTime->objectName(), ui->runTime->text());
     settings.setValue(ui->ThrotRamps->objectName(), ui->ThrotRamps->isChecked());
-    settings.setValue(ui->RoadGradient->objectName(), ui->RoadGradient->text());
+    settings.setValue(ui->RoadGradient->objectName(), ui->RoadGradient->text());    
+    settings.setValue(ui->torqueDemand->objectName(), ui->torqueDemand->text());
+    settings.setValue(ui->opMode->objectName(), ui->opMode->text());
+    settings.setValue(ui->direction->objectName(), ui->direction->text());
 
     settings.setValue(ui->cb_ContCurr->objectName(), ui->cb_ContCurr->isChecked());
     settings.setValue(ui->cb_ContVolt->objectName(), ui->cb_ContVolt->isChecked());
@@ -376,6 +382,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue(ui->cb_MotorPos->objectName(), ui->cb_MotorPos->isChecked());
     settings.setValue(ui->cb_PhaseVolts->objectName(), ui->cb_PhaseVolts->isChecked());
     settings.setValue(ui->rb_OP_Amps->objectName(), ui->rb_OP_Amps->isChecked());
+
+    saveInvParam(".paramPersist.json");
 
     motorGraph->saveWinState();
     simulationGraph->saveWinState();
@@ -956,10 +964,18 @@ void MainWindow::on_opMode_editingFinished()
 void MainWindow::on_pbLoadMot_clicked()
 {
     bool haveLd=false, haveLq=false, haveRs=false, haveFL=false;
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open json"), "", tr("JSON Files (*.json)"));
+    QString path;
+    QSettings settings(SETTINGS_NAME, SETTINGS_VER);
+    path = settings.value("MotLoadPath","").toString();
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open json"), path, tr("JSON Files (*.json)"));
     QFile inFile(fileName);
     if(inFile.open(QIODevice::ReadOnly))
     {
+        QFileInfo fi(fileName);
+        QString path = fi.absolutePath();
+        QSettings settings(SETTINGS_NAME, SETTINGS_VER);
+        settings.setValue("MotLoadPath", path);
+
         QByteArray data = inFile.readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(data);
         QJsonObject jsonObject = jsonResponse.object();
@@ -994,6 +1010,8 @@ void MainWindow::on_pbLoadMot_clicked()
                 on_FluxLinkage_editingFinished();
             }
         }
+        inFile.close();
+
         if(!haveLd)
             QMessageBox::warning(this, tr("IPMMotorSim"), tr("No Ld value found"));
         if(!haveLq)
@@ -1007,14 +1025,21 @@ void MainWindow::on_pbLoadMot_clicked()
         QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not open file"));
 }
 
-
 void MainWindow::on_pbSaveMot_clicked()
 {
     QString line;
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Open json"), "", tr("Json Files (*.json)"));
+    QString path;
+    QSettings settings(SETTINGS_NAME, SETTINGS_VER);
+    path = settings.value("MotSavePath","").toString();
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Open json"), path, tr("Json Files (*.json)"));
     QFile outFile(fileName);
     if(outFile.open(QIODevice::WriteOnly))
     {
+        QFileInfo fi(fileName);
+        QString path = fi.absolutePath();
+        QSettings settings(SETTINGS_NAME, SETTINGS_VER);
+        settings.setValue("MotSavePath", path);
+
         outFile.write("{\n");
         line = "  \"Lq\": " + ui->Lq->text() + ",\n";
         outFile.write(line.toUtf8());
@@ -1024,6 +1049,7 @@ void MainWindow::on_pbSaveMot_clicked()
         outFile.write(line.toUtf8());
         line = "  \"FluxLinkage\": " + ui->FluxLinkage->text() + "\n}";
         outFile.write(line.toUtf8());
+        outFile.close();
     }
     else
         QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not create file"));
@@ -1031,7 +1057,25 @@ void MainWindow::on_pbSaveMot_clicked()
 
 void MainWindow::on_pbLoadInv_clicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open json"), "", tr("JSON Files (*.json)"));
+    QString path;
+    QSettings settings(SETTINGS_NAME, SETTINGS_VER);
+    path = settings.value("InvLoadPath","").toString();
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open json"), path, tr("JSON Files (*.json)"));
+
+
+    if(loadInvParam(fileName))
+    { //loaded OK so save path
+        QFileInfo fi(fileName);
+        QString path = fi.absolutePath();
+        QSettings settings(SETTINGS_NAME, SETTINGS_VER);
+        settings.setValue("InvLoadPath", path);
+    }
+    else
+        QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not open file"));
+}
+
+bool MainWindow::loadInvParam(QString fileName)
+{
     QFile inFile(fileName);
     if(inFile.open(QIODevice::ReadOnly))
     {
@@ -1063,14 +1107,32 @@ void MainWindow::on_pbLoadInv_clicked()
                 QMessageBox::warning(this, tr("IPMMotorSim"), message);
             }
         }
+        inFile.close();
+        return true;
     }
     else
-        QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not open file"));
+        return false;
 }
 
 void MainWindow::on_pbSaveInv_clicked()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Open json"), "", tr("Json Files (*.json)"));
+    QString path;
+    QSettings settings(SETTINGS_NAME, SETTINGS_VER);
+    path = settings.value("InvSavePath","").toString();
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Open json"), path, tr("Json Files (*.json)"));
+    if(saveInvParam(fileName))
+    {
+        QFileInfo fi(fileName);
+        QString path = fi.absolutePath();
+        QSettings settings(SETTINGS_NAME, SETTINGS_VER);
+        settings.setValue("InvSavePath", path);
+    }
+    else
+        QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not create file"));
+}
+
+bool MainWindow::saveInvParam(QString fileName)
+{
     QFile outFile(fileName);
     QString comma = "\n";
     if(outFile.open(QIODevice::WriteOnly))
@@ -1090,7 +1152,9 @@ void MainWindow::on_pbSaveInv_clicked()
             }
         }
         outFile.write("\n}");
+        outFile.close();
+        return true;
     }
     else
-        QMessageBox::warning(this, tr("IPMMotorSim"), tr("Could not create file"));
+        return false;
 }

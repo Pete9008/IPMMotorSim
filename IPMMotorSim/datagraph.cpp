@@ -28,7 +28,7 @@
 DataGraph::DataGraph(QString name, QWidget *parent) : QMainWindow(parent)
 {
     mName = name;
-    QSettings settings("OpenInverter", SETTINGS_VER);
+    QSettings settings(SETTINGS_NAME, SETTINGS_VER);
 
     minY_L =  std::numeric_limits<double>::max();
     maxY_L =  std::numeric_limits<double>::lowest();
@@ -69,7 +69,7 @@ void DataGraph::setAxisText(QString x, QString left, QString right)
 
 void DataGraph::saveWinState()
 {
-    QSettings settings("OpenInverter", SETTINGS_VER);
+    QSettings settings(SETTINGS_NAME, SETTINGS_VER);
     QByteArray geo = saveGeometry();
     QByteArray ste = saveState();
     QString gname = mName + "/geometry";
