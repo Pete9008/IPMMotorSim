@@ -212,67 +212,67 @@ MainWindow::MainWindow(QWidget *parent) :
 
     motorGraph->setWindowTitle("Motor Currents");
     motorGraph->setAxisText("", "Amps (A)", "");
-    motorGraph->addSeries("Ia (A)", left, IA);
-    motorGraph->addSeries("Ib (A)", left, IB);
-    motorGraph->addSeries("Ic (A)", left, IC);
-    motorGraph->addSeries("Iq (A)", left, IQ);
+    motorGraph->addSeries("Ia (A)", axis_left, IA);
+    motorGraph->addSeries("Ib (A)", axis_left, IB);
+    motorGraph->addSeries("Ic (A)", axis_left, IC);
+    motorGraph->addSeries("Iq (A)", axis_left, IQ);
     motorGraph->setColour(Qt::blue, IQ);
-    motorGraph->addSeries("Id (A)", left, ID);
+    motorGraph->addSeries("Id (A)", axis_left, ID);
     motorGraph->setColour(Qt::red, ID);
     if(settings.contains(ui->cb_MotCurr->objectName())) ui->cb_MotCurr->setChecked(settings.value(ui->cb_MotCurr->objectName()).toBool());
     if(settings.contains(ui->cb_PhaseCurrs->objectName())) ui->cb_PhaseCurrs->setChecked(settings.value(ui->cb_PhaseCurrs->objectName()).toBool());
 
     simulationGraph->setWindowTitle("Simulation Data");
     simulationGraph->setAxisText("", "Angle (Degrees)", "Speed (Hz)");
-    simulationGraph->addSeries("Motor Position (degrees)", left, M_MOTOR_POS);
+    simulationGraph->addSeries("Motor Position (degrees)", axis_left, M_MOTOR_POS);
     simulationGraph->setOpacity(0.25, M_MOTOR_POS);
-    simulationGraph->addSeries("Controller Position (degrees)", left, M_CONT_POS);
+    simulationGraph->addSeries("Controller Position (degrees)", axis_left, M_CONT_POS);
     simulationGraph->setOpacity(0.25, M_CONT_POS);
-    simulationGraph->addSeries("Motor Elec Speed (Hz)", right, M_RPM);
+    simulationGraph->addSeries("Motor Elec Speed (Hz)", axis_right, M_RPM);
     simulationGraph->setColour(Qt::blue, M_RPM);
     if(settings.contains(ui->cb_Simulation->objectName())) ui->cb_Simulation->setChecked(settings.value(ui->cb_Simulation->objectName()).toBool());
     if(settings.contains(ui->cb_MotorPos->objectName())) ui->cb_MotorPos->setChecked(settings.value(ui->cb_MotorPos->objectName()).toBool());
 
     controllerGraph->setWindowTitle("Controller Voltages");
     controllerGraph->setAxisText("", "Volts (V)", "");
-    controllerGraph->addSeries("Va (V)", left, VA);
-    controllerGraph->addSeries("Vb (V)", left, VB);
-    controllerGraph->addSeries("Vc (V)", left, VC);
-    controllerGraph->addSeries("Vq (V)", left, VQ);
+    controllerGraph->addSeries("Va (V)", axis_left, VA);
+    controllerGraph->addSeries("Vb (V)", axis_left, VB);
+    controllerGraph->addSeries("Vc (V)", axis_left, VC);
+    controllerGraph->addSeries("Vq (V)", axis_left, VQ);
     controllerGraph->setColour(Qt::blue, VQ);
-    controllerGraph->addSeries("Vd (V)", left, VD);
+    controllerGraph->addSeries("Vd (V)", axis_left, VD);
     controllerGraph->setColour(Qt::red, VD);
     if(settings.contains(ui->cb_ContVolt->objectName())) ui->cb_ContVolt->setChecked(settings.value(ui->cb_ContVolt->objectName()).toBool());
     if(settings.contains(ui->cb_PhaseVolts->objectName())) ui->cb_PhaseVolts->setChecked(settings.value(ui->cb_PhaseVolts->objectName()).toBool());
 
     debugGraph->setWindowTitle("Controller Currents");
     debugGraph->setAxisText("", "Amps (A)", "");
-    debugGraph->addSeries("Iq (A)", left, C_IQ);
+    debugGraph->addSeries("Iq (A)", axis_left, C_IQ);
     debugGraph->setColour(Qt::blue, C_IQ);
-    debugGraph->addSeries("Id (A)", left, C_ID);
+    debugGraph->addSeries("Id (A)", axis_left, C_ID);
     debugGraph->setColour(Qt::red, C_ID);
-    debugGraph->addSeries("Ifw (A)", left, C_IFW);
-    debugGraph->addSeries("Throttle Reduction (%)", right, C_IVLIM);
+    debugGraph->addSeries("Ifw (A)", axis_left, C_IFW);
+    debugGraph->addSeries("Throttle Reduction (%)", axis_right, C_IVLIM);
     if(settings.contains(ui->cb_ContCurr->objectName())) ui->cb_ContCurr->setChecked(settings.value(ui->cb_ContCurr->objectName()).toBool());
 
     voltageGraph->setWindowTitle("Motor Voltages");
     voltageGraph->setAxisText("", "Volts (V)", "");
-    voltageGraph->addSeries("Vd (V)", left, VVD);
+    voltageGraph->addSeries("Vd (V)", axis_left, VVD);
     voltageGraph->setColour(Qt::red, VVD);
-    voltageGraph->addSeries("Vq (V)", left, VVQ);
+    voltageGraph->addSeries("Vq (V)", axis_left, VVQ);
     voltageGraph->setColour(Qt::blue, VVQ);
-    voltageGraph->addSeries("Vq_BEMF (V)", left, VVQ_BEMF);
-    voltageGraph->addSeries("Vq_LdId (V)", left, VVQ_DT_ID);
-    voltageGraph->addSeries("Vd_LqIq (V)", left, VVD_DT_IQ);
-    voltageGraph->addSeries("Vq_RqIq (V)", left, VVQ_DT_RQ);
-    voltageGraph->addSeries("Vd_RdIq (V)", left, VVD_DT_RD);
-    voltageGraph->addSeries("VLd (V)", left, VVLD);
-    voltageGraph->addSeries("VLq (V)", left, VVLQ);
+    voltageGraph->addSeries("Vq_BEMF (V)", axis_left, VVQ_BEMF);
+    voltageGraph->addSeries("Vq_LdId (V)", axis_left, VVQ_DT_ID);
+    voltageGraph->addSeries("Vd_LqIq (V)", axis_left, VVD_DT_IQ);
+    voltageGraph->addSeries("Vq_RqIq (V)", axis_left, VVQ_DT_RQ);
+    voltageGraph->addSeries("Vd_RdIq (V)", axis_left, VVD_DT_RD);
+    voltageGraph->addSeries("VLd (V)", axis_left, VVLD);
+    voltageGraph->addSeries("VLq (V)", axis_left, VVLQ);
     if(settings.contains(ui->cb_MotVolt->objectName())) ui->cb_MotVolt->setChecked(settings.value(ui->cb_MotVolt->objectName()).toBool());
 
     idigGraph->setWindowTitle("Operating Point");
     idigGraph->setAxisText("Id (A)", "Iq (A)", "");
-    idigGraph->addSeries("I (A)", left, IDIQAMPS);
+    idigGraph->addSeries("I (A)", axis_left, IDIQAMPS);
     if(settings.contains(ui->cb_OpPoint->objectName())) ui->cb_OpPoint->setChecked(settings.value(ui->cb_OpPoint->objectName()).toBool());    
     if(settings.contains(ui->rb_OP_Amps->objectName()))
     {
@@ -285,16 +285,16 @@ MainWindow::MainWindow(QWidget *parent) :
         {
             ui->rb_OP_Volts->setChecked(true);
             idigGraph->setAxisText("Vd (V)", "Vq (V)", "");
-            idigGraph->updateSeries("V (V)", left, IDIQAMPS);
+            idigGraph->updateSeries("V (V)", axis_left, IDIQAMPS);
         }
     }
 
     powerGraph->setWindowTitle("Power/Torque");
     powerGraph->setAxisText("Time (s)", "Power (kW)", "Torque (Nm)");
-    powerGraph->addSeries("Power (kW)", left, POWER);
-    powerGraph->addSeries("Torque (Nm)", right, TORQUE);
-    powerGraph->addSeries("Elec Power (kW)", left, ELEC_POWER);
-    powerGraph->addSeries("Efficiency (%)", left, EFFICIENCY);
+    powerGraph->addSeries("Power (kW)", axis_left, POWER);
+    powerGraph->addSeries("Torque (Nm)", axis_right, TORQUE);
+    powerGraph->addSeries("Elec Power (kW)", axis_left, ELEC_POWER);
+    powerGraph->addSeries("Efficiency (%)", axis_left, EFFICIENCY);
     if(settings.contains(ui->cb_PowTorqTime->objectName())) ui->cb_PowTorqTime->setChecked(settings.value(ui->cb_PowTorqTime->objectName()).toBool());
     if(settings.contains(ui->rb_Speed->objectName()))
     {
@@ -934,12 +934,12 @@ void MainWindow::on_rb_OP_Amps_toggled(bool checked)
     if(checked)
     {
         idigGraph->setAxisText("Id (A)", "Iq (A)", "");
-        idigGraph->updateSeries("I (A)", left, IDIQAMPS);
+        idigGraph->updateSeries("I (A)", axis_left, IDIQAMPS);
     }
     else
     {
         idigGraph->setAxisText("Vd (V)", "Vq (V)", "");
-        idigGraph->updateSeries("V (V)", left, IDIQAMPS);
+        idigGraph->updateSeries("V (V)", axis_left, IDIQAMPS);
     }
 }
 

@@ -23,7 +23,7 @@
 
 IdIqGraph::IdIqGraph(QString name, QWidget *parent) : DataGraph (name, parent)
 {
-    addSeries("Is (A)",left, 10);
+    addSeries("Is (A)",axis_left, 10);
 }
 
 void IdIqGraph::updateGraph(bool isAmps)
@@ -34,12 +34,12 @@ void IdIqGraph::updateGraph(bool isAmps)
     //add is circle
     if(isAmps)
     {
-        updateSeries("Is (A)",left, 10);
+        updateSeries("Is (A)",axis_left, 10);
         s = Param::GetFloat(Param::throtcur) * 100;
     }
     else
     {
-        updateSeries("Vs (V)",left, 10);
+        updateSeries("Vs (V)",axis_left, 10);
         s = 1.1547 * Param::GetFloat(Param::udc) * 0.5;
     }
 

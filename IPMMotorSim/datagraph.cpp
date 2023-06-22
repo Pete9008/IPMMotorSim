@@ -110,7 +110,7 @@ void DataGraph::addDataPoint(double x, double y, int key)
 {
     if(m_series.contains(key))
     {
-        if( m_axis[key] == left)
+        if( m_axis[key] == axis_left)
         {
             if(y<minY_L) minY_L = y;
             if(y>maxY_L) maxY_L = y;
@@ -136,7 +136,7 @@ void DataGraph::addDataPoints(QList<QPointF> pointList, int key)
         {
             QPointF p = i.next();
 
-            if( m_axis[key] == left)
+            if( m_axis[key] == axis_left)
             {
                 if(p.y()<minY_L) minY_L = p.y();
                 if(p.y()>maxY_L) maxY_L = p.y();
@@ -170,7 +170,7 @@ void DataGraph::updateGraph(void)
         if(m_opacity.contains(i.key())) //if we have an opacity then override standard one
             series->setOpacity(m_opacity[i.key()]);
         series->attachAxis(m_axisX);
-        if(m_axis[i.key()] == left)
+        if(m_axis[i.key()] == axis_left)
             series->attachAxis(m_axisL);
         else
             series->attachAxis(m_axisR);

@@ -26,7 +26,7 @@
 #include "chartview.h"
 #include "chart.h"
 
-enum axisSel {left,right};
+enum axisSel {axis_left,axis_right};
 
 class DataGraph : public QMainWindow
 {
